@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Intake Form</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --primary: #0f766e;
+      --primary-hover: #0d5c56;
+      --focus: #14b8a6;
+      --error: #dc2626;
+      --success: #059669;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 2rem; }
+
+    h1 { font-size: 1.75rem; font-weight: 700; margin: 0 0 0.25rem; }
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; }
+
+    .form-card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin: 1.5rem 0 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .form-row label { font-size: 0.9rem; white-space: nowrap; }
+    .form-row input[type="text"],
+    .form-row input[type="tel"],
+    .form-row input[type="email"],
+    .form-row input[type="number"],
+    .form-row input[type="date"] {
+      flex: 1;
+      min-width: 120px;
+      padding: 0.5rem 0.6rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+    }
+
+    .form-row input:focus {
+      outline: none;
+      border-color: var(--focus);
+      box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2);
+    }
+
+    .chk-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .chk-group label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .chk-group input[type="checkbox"],
+    .chk-group input[type="radio"] {
+      width: auto;
+      cursor: pointer;
+    }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.9rem; margin-bottom: 0.35rem; }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.5rem 0.6rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--focus);
+      box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2);
+    }
+
+    textarea { min-height: 80px; resize: vertical; }
+
+    .indent { margin-left: 1.5rem; }
+    .indent-2 { margin-left: 3rem; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+
+    @media (max-width: 600px) {
+      .grid-2, .grid-3, .cond-grid { grid-template-columns: 1fr; }
+    }
+
+    .cond-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .cond-grid label {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 0;
+    }
+    .cond-subsection {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 1rem 0 0.5rem;
+    }
+    .cond-subsection:first-of-type { margin-top: 0; }
+    .cond-subsection-wrap { margin-top: 1rem; }
+    .cond-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .fam-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    .fam-table th,
+    .fam-table td {
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.5rem;
+      text-align: left;
+    }
+
+    .fam-table { table-layout: fixed; }
+    .fam-table th { background: var(--bg); font-weight: 500; }
+    .fam-table th:nth-child(1), .fam-table td:nth-child(1) { width: 100px; }
+    .fam-table th:nth-child(2), .fam-table td:nth-child(2) { width: 120px; }
+    .fam-table th:nth-child(3), .fam-table td:nth-child(3) { width: 55px; }
+    .fam-table th:nth-child(5), .fam-table td:nth-child(5) { width: 40px; }
+    .allergy-table th:nth-child(1), .allergy-table td:nth-child(1) { width: 35%; }
+    .allergy-table th:nth-child(2), .allergy-table td:nth-child(2) { width: auto; }
+    .allergy-table th:nth-child(3), .allergy-table td:nth-child(3) { width: 40px; }
+    .other-conditions-table th:nth-child(1), .other-conditions-table td:nth-child(1) { width: 100%; }
+    .other-conditions-table th:nth-child(2), .other-conditions-table td:nth-child(2) { width: 40px; }
+    .surgery-table th:nth-child(1), .surgery-table td:nth-child(1) { width: auto; }
+    .surgery-table th:nth-child(2), .surgery-table td:nth-child(2) { width: 90px; }
+    .surgery-table th:nth-child(3), .surgery-table td:nth-child(3) { width: 40px; }
+    .fam-table input, .fam-table select { width: 100%; min-width: 0; padding: 0.3rem; }
+    .fam-table .btn-remove-row {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      font-size: 1.2rem;
+      line-height: 1;
+      background: var(--border);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+    .fam-table .btn-remove-row:hover { background: #dc2626; color: white; }
+    .btn-add-row {
+      margin-top: 0.5rem;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-add-row:hover { background: var(--primary-hover); }
+
+    .submit-wrap { text-align: center; margin-top: 2rem; }
+
+    button[type="submit"] {
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 0.75rem 2rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button[type="submit"]:hover { background: var(--primary-hover); }
+    button[type="submit"]:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .message { padding: 1rem; border-radius: 8px; margin-top: 1rem; font-size: 0.9rem; display: none; }
+    .message.success { background: #d1fae5; color: var(--success); display: block; }
+    .message.error { background: #fee2e2; color: var(--error); display: block; }
+
+    .inline-input {
+      width: 70px !important;
+      min-width: 70px !important;
+      max-width: 70px !important;
+      display: inline-block;
+      margin: 0 0.25rem;
+    }
+
+    .input-xs {
+      width: 75px !important;
+      min-width: 75px !important;
+      max-width: 75px !important;
+      flex: 0 0 auto !important;
+    }
+    .input-sm {
+      width: 100px !important;
+      min-width: 100px !important;
+      max-width: 100px !important;
+      flex: 0 0 auto !important;
+    }
+    .input-md {
+      width: 240px !important;
+      max-width: 240px !important;
+      min-width: 0 !important;
+      flex: 0 0 auto !important;
+    }
+    .input-lg {
+      width: 300px !important;
+      max-width: 300px !important;
+      min-width: 0 !important;
+      flex: 0 0 auto !important;
+    }
+    .chk-group .input-md {
+      width: 240px !important;
+      max-width: 240px !important;
+    }
+
+    .conditional-section { display: none; margin-bottom: 0.75rem; }
+    .conditional-section.visible { display: block; }
+    #allergy-table-section.allergy-hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Patient Intake Form</h1>
+      <p class="subtitle">Thank you for providing this helpful information while waiting - it will allow me to know more about your background and save asking you so many questions</p>
+    </header>
+
+    <form id="intake-form" class="form-card">
+      <h2 class="section-title">CONTACT INFORMATION</h2>
+      <div class="form-row">
+        <label>Full Name:</label>
+        <input type="text" name="fullName" placeholder="Full name" class="input-lg">
+        <label>Age:</label>
+        <input type="number" name="age" min="1" max="140" placeholder="Age" class="input-xs">
+      </div>
+      <div class="form-row">
+        <label>What name do you prefer to be called?</label>
+        <input type="text" name="preferredName" placeholder="Preferred name" class="input-md">
+      </div>
+
+      <div class="form-row">
+        <label>Phone:</label>
+        <span>Home</span>
+        <input type="tel" name="phoneHome" placeholder="Home">
+        <span>Work</span>
+        <input type="tel" name="phoneWork" placeholder="Work">
+        <span>Cell</span>
+        <input type="tel" name="phoneCell" placeholder="Cell">
+      </div>
+
+      <div class="chk-group">
+        <span>Preferred number:</span>
+        <label><input type="checkbox" name="preferredNumber" value="Home"> Home</label>
+        <label><input type="checkbox" name="preferredNumber" value="Work"> Work</label>
+        <label><input type="checkbox" name="preferredNumber" value="Cell"> Cell</label>
+        <span style="margin-left:1rem">May we leave a message?</span>
+        <label><input type="radio" name="leaveMessage" value="Yes"> Yes</label>
+        <label><input type="radio" name="leaveMessage" value="No"> No</label>
+      </div>
+
+      <div class="form-row">
+        <label>Email:</label>
+        <input type="email" name="email" placeholder="Email" class="input-md">
+      </div>
+
+      <div class="form-row">
+        <label>Emergency contact:</label>
+        <input type="text" name="emergencyContact" placeholder="Name">
+        <label>Relationship:</label>
+        <input type="text" name="emergencyRelation" placeholder="Relationship">
+      </div>
+      <div class="form-row">
+        <label>Contact's Phone:</label>
+        <input type="tel" name="emergencyPhone" placeholder="Phone" class="input-md">
+      </div>
+
+      <h2 class="section-title">MEDICAL TEAM</h2>
+
+      <div class="form-row">
+        <label>Family doctor / Nurse Practitioner:</label>
+        <input type="text" name="familyDoctor" placeholder="Name" class="input-lg">
+        <label><input type="checkbox" name="familyDoctorNone" value="yes"> None</label>
+      </div>
+
+      <div class="chk-group">
+        <span>Have you met Dr. Moore before?</span>
+        <label><input type="radio" name="metDrMoore" value="Never"> Never</label>
+        <label><input type="radio" name="metDrMoore" value="At office"> At office</label>
+        <label><input type="radio" name="metDrMoore" value="In ER"> In ER</label>
+        <label><input type="radio" name="metDrMoore" value="In hospital"> In hospital</label>
+        <label><input type="radio" name="metDrMoore" value="Stress lab"> Stress lab</label>
+      </div>
+
+      <div class="form-group">
+        <label>What is your main medical question for Dr. Moore?</label>
+        <textarea name="mainMedicalQuestion" placeholder="Describe your main medical question"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Other specialists involved in your care?</label>
+        <input type="text" name="otherSpecialists" placeholder="Specialists">
+      </div>
+
+      <div class="form-group">
+        <label>Any upcoming surgery?</label>
+        <input type="text" name="upcomingSurgery" placeholder="Surgery details">
+      </div>
+
+      <div class="chk-group">
+        <span>Prescription Insurance:</span>
+        <label><input type="radio" name="rxInsurance" value="None"> None (I pay the full cost)</label>
+        <label><input type="radio" name="rxInsurance" value="NB Seniors"> NB Seniors (Blue Cross)</label>
+        <label><input type="radio" name="rxInsurance" value="NB Drug"> NB Drug Plan</label>
+        <label><input type="radio" name="rxInsurance" value="Social services"> Social services plan</label>
+        <label><input type="radio" name="rxInsurance" value="Native"> Native plan</label>
+        <label><input type="radio" name="rxInsurance" value="Private"> Private or Group plan:</label>
+        <input type="text" name="rxInsurancePlan" placeholder="Plan name" style="width:150px">
+      </div>
+
+      <div class="form-row">
+        <label>Preferred Pharmacy:</label>
+        <input type="text" name="preferredPharmacy" placeholder="Pharmacy name" class="input-md">
+      </div>
+
+      <h2 class="section-title">RESIDENCE / EMPLOYMENT / RELATIONSHIPS</h2>
+
+      <div class="chk-group">
+        <label><input type="radio" name="residence" value="Own home"> Own home</label>
+        <label><input type="radio" name="residence" value="Relative's home"> Relative's home</label>
+        <label><input type="radio" name="residence" value="Apartment"> Apartment</label>
+        <label><input type="radio" name="residence" value="Condo"> Condo</label>
+        <label><input type="radio" name="residence" value="Senior's complex"> Senior's complex</label>
+        <label><input type="radio" name="residence" value="Nursing home"> Nursing home</label>
+      </div>
+
+      <div class="form-group">
+        <label>Does anyone live at home with you?</label>
+        <input type="text" name="livesWith" placeholder="Who lives with you">
+      </div>
+
+      <div class="chk-group">
+        <label><input type="radio" name="maritalStatus" value="Single"> Single</label>
+        <label><input type="radio" name="maritalStatus" value="Partner"> Partner</label>
+        <label><input type="radio" name="maritalStatus" value="Married"> Married / Common-Law</label>
+        <label><input type="radio" name="maritalStatus" value="Separated"> Separated</label>
+        <label><input type="radio" name="maritalStatus" value="Divorced"> Divorced</label>
+        <label><input type="radio" name="maritalStatus" value="Widowed"> Widowed</label>
+      </div>
+
+      <div class="form-row">
+        <label>Education:</label>
+        <input type="text" name="education" placeholder="Education" class="input-lg">
+        <label><input type="checkbox" name="student" value="yes"> Student</label>
+        <label><input type="checkbox" name="readingDifficulties" value="yes"> Reading difficulties</label>
+      </div>
+
+      <div class="chk-group">
+        <span>Occupations:</span>
+        <label><input type="radio" name="occupationStatus" value="Current"> Current</label>
+        <label><input type="radio" name="occupationStatus" value="Past"> Past</label>
+        <input type="text" name="occupation" placeholder="Occupation details">
+      </div>
+
+      <div class="chk-group">
+        <label><input type="radio" name="employment" value="Full-time"> Full-time</label>
+        <label><input type="radio" name="employment" value="Part-time"> Part-time</label>
+        <label><input type="radio" name="employment" value="Retired"> Retired</label>
+        <label><input type="radio" name="employment" value="Disabled"> Disabled</label>
+      </div>
+
+      <h2 class="section-title">HABITS AND ACTIVITIES</h2>
+
+      <div class="chk-group">
+        <span>Nicotine/tobacco use?</span>
+        <label><input type="radio" name="tobacco" value="Never smoked"> Never smoked</label>
+        <label><input type="radio" name="tobacco" value="Former"> Former smoker</label>
+        <label><input type="radio" name="tobacco" value="Current"> Current smoker</label>
+      </div>
+      <div class="indent conditional-section" data-tobacco="Former">
+        <div class="form-row">
+          When did you quit? <input type="text" name="quitDate" class="inline-input" placeholder="Date">
+        </div>
+        <div class="form-row">
+          After <input type="text" name="packsPerDay" class="inline-input" placeholder="Packs"> packs per day for <input type="text" name="yearsSmoked" class="inline-input" placeholder="Years"> years
+        </div>
+      </div>
+      <div class="indent conditional-section" data-tobacco="Current">
+        <div class="chk-group">
+          <label><input type="checkbox" name="smokeType" value="Cigarettes"> Cigarettes</label>
+          <label><input type="checkbox" name="smokeType" value="Cigars"> Cigars</label>
+          <label><input type="checkbox" name="smokeType" value="Vape"> Vape</label>
+          <label><input type="checkbox" name="smokeType" value="Chewing tobacco"> Chewing tobacco</label>
+        </div>
+        <div class="form-row">
+          How many packs per day? <input type="text" name="currentPacksPerDay" class="inline-input"> for <input type="text" name="currentYears" class="inline-input"> years
+        </div>
+        <div class="indent chk-group">
+          <label><input type="checkbox" name="quitAttempts" value="yes"> Tried to quit but restarted <input type="text" name="quitAttemptsCount" class="inline-input"> times</label>
+          <label><input type="radio" name="quitInterest" value="Interested"> Interested in quitting</label>
+          <label><input type="radio" name="quitInterest" value="Not ready"> Not ready to quit at this time</label>
+        </div>
+      </div>
+
+      <div class="chk-group">
+        <span>Alcohol use?</span>
+        <label><input type="radio" name="alcohol" value="None"> None</label>
+        <label><input type="radio" name="alcohol" value="Some"> Some</label>
+        <label><input type="radio" name="alcohol" value="Struggle"> Past or current struggle with alcohol</label>
+      </div>
+      <div class="indent conditional-section" data-alcohol="Some,Struggle">
+        <div class="form-row">
+          <input type="text" name="alcoholDrinks" class="inline-input" placeholder="0"> drinks average
+          <label><input type="radio" name="alcoholPer" value="day"> per day</label>
+          <label><input type="radio" name="alcoholPer" value="week"> per week</label>
+        </div>
+      </div>
+
+      <div class="chk-group">
+        <span>Marijuana or CBD oil use?</span>
+        <label><input type="radio" name="marijuana" value="None"> None</label>
+        <label><input type="radio" name="marijuana" value="Recreational"> Recreational</label>
+        <label><input type="radio" name="marijuana" value="Medical"> Medical</label>
+      </div>
+
+      <div class="chk-group">
+        <span>Other recreational drug use?</span>
+        <label><input type="radio" name="otherDrugs" value="No"> No</label>
+        <label><input type="radio" name="otherDrugs" value="Yes"> Yes</label>
+      </div>
+      <div class="indent conditional-section" data-otherdrugs="Yes">
+        <div class="chk-group">
+          <label><input type="checkbox" name="otherDrugsType" value="Cocaine"> Cocaine</label>
+          <label><input type="checkbox" name="otherDrugsType" value="Meth"> Meth</label>
+          <label><input type="checkbox" name="otherDrugsType" value="Other"> Other:</label>
+          <input type="text" name="otherDrugsOther" placeholder="Specify" style="width:120px">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Coffees or other caffeinated drinks per day:</label>
+        <input type="text" name="caffeinePerDay" placeholder="Number" class="input-xs">
+      </div>
+
+      <div class="form-row">
+        <label>Height:</label>
+        <input type="text" name="height" placeholder="e.g. 5'10&quot;" class="input-sm">
+        <label>Weight:</label>
+        <input type="text" name="weight" placeholder="e.g. 150 lbs" class="input-sm">
+        <label><input type="checkbox" name="weightNotSure" value="yes"> Not sure</label>
+      </div>
+
+      <div class="chk-group">
+        <span>Do you get regular exercise?</span>
+        <label><input type="radio" name="exercise" value="Not much"> Not much</label>
+        <label><input type="radio" name="exercise" value="Yes"> Yes –</label>
+        <input type="text" name="exerciseDetails" placeholder="Describe" style="flex:1;min-width:150px">
+      </div>
+
+      <div class="form-group">
+        <label>Any hobbies or leisure activities you wish to share?</label>
+        <input type="text" name="hobbies" placeholder="Hobbies / activities">
+      </div>
+
+      <h2 class="section-title">ALLERGIES / SIDE EFFECTS</h2>
+      <label class="chk-group"><input type="checkbox" name="noAllergies" value="yes" id="noAllergies"> I have no allergies</label>
+      <div id="allergy-table-section">
+      <p style="font-size:0.9rem;margin:0.5rem 0">List any medication allergies or side effects and the type of reaction you had:</p>
+      <table class="fam-table allergy-table">
+        <thead>
+          <tr>
+            <th>Allergen</th>
+            <th>Reaction</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="allergy-rows">
+          <tr class="allergy-row">
+            <td><input type="text" name="allergy_0_allergen" placeholder="e.g. Penicillin"></td>
+            <td><input type="text" name="allergy_0_reaction" placeholder="e.g. Rash, swelling"></td>
+            <td><button type="button" class="btn-remove-row" title="Remove row">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" id="add-allergy-row" class="btn-add-row">+ Add row</button>
+      </div>
+
+      <h2 class="section-title">MEDICAL CONDITIONS</h2>
+
+      <h3 class="cond-subsection">Heart Disease Risk Factors</h3>
+      <div class="cond-grid" id="cond-heart-risk">
+        <label><input type="checkbox" name="cond_high_bp" value="yes"> High blood pressure</label>
+        <label><input type="checkbox" name="cond_cholesterol" value="yes"> Cholesterol problems</label>
+        <label><input type="checkbox" name="cond_diabetes" value="yes"> Diabetes</label>
+        <div class="cond-details conditional-section" data-cond="cond_diabetes" style="margin-left:1.5rem;margin-top:0.25rem">
+          <label><input type="radio" name="diabetesType" value="Type 1"> Type 1</label>
+          <label><input type="radio" name="diabetesType" value="Type 2"> Type 2</label>
+          <label><input type="checkbox" name="diabetesInsulin" value="yes"> On insulin</label>
+          <label>Age at diagnosis: <input type="number" name="diabetesAge" class="input-xs" min="1" max="140" placeholder="Age"></label>
+        </div>
+        <label><input type="checkbox" name="cond_erectile_dysfunction" value="yes"> Erectile dysfunction (ED)</label>
+        <label><input type="checkbox" name="cond_menopausal" value="yes"> Post-menopausal</label>
+        <div class="cond-details conditional-section" data-cond="cond_menopausal" style="margin-left:1.5rem;margin-top:0.25rem">
+          <label>Age at menopause: <input type="number" name="menopausalAge" class="input-xs" min="1" max="140" placeholder="Age"></label>
+        </div>
+        <label><input type="checkbox" name="cond_stroke" value="yes"> Stroke</label>
+        <label><input type="checkbox" name="cond_sleep_apnea" value="yes"> Sleep apnea</label>
+        <div class="cond-details conditional-section" data-cond="cond_sleep_apnea" style="margin-left:1.5rem;margin-top:0.25rem">
+          <label><input type="checkbox" name="sleepApneaCpap" value="yes"> On CPAP</label>
+          <label><input type="checkbox" name="sleepApneaNoTolerate" value="yes"> Didn't tolerate CPAP</label>
+        </div>
+        <label><input type="checkbox" name="cond_kidney_disease" value="yes"> Kidney disease</label>
+
+      </div>
+
+      <h3 class="cond-subsection">Heart Problems</h3>
+      <div class="cond-grid" id="cond-heart-problems">
+        <label><input type="checkbox" name="cond_heart_attack" value="yes"> Heart Attack (MI)</label>
+        <label><input type="checkbox" name="cond_angina" value="yes"> Angina</label>
+        <label><input type="checkbox" name="cond_angioplasty" value="yes"> Coronary 'balloon' or 'stent'</label>
+        <label><input type="checkbox" name="cond_cabg" value="yes"> Coronary artery bypass surgery (CABG)</label>
+        <label><input type="checkbox" name="cond_valve_surgery" value="yes"> Valve surgery</label>
+        <label><input type="checkbox" name="cond_defib" value="yes"> Defibrillator (ICD)</label>
+        <label><input type="checkbox" name="cond_pacemaker" value="yes"> Pacemaker</label>
+        <label><input type="checkbox" name="cond_atrial_fib" value="yes"> Atrial fibrillation</label>
+        <label><input type="checkbox" name="cond_heart_failure" value="yes"> Heart Failure</label>
+        <div class="form-row" style="margin-top:0.5rem">
+          <label>Other:</label>
+          <input type="text" name="cond_heart_other" placeholder="Please specify">
+        </div>
+      </div>
+
+      <div class="cond-subsection-wrap">
+        <div class="chk-group">
+          <span>Any lung disease?</span>
+          <label><input type="radio" name="hasLung" value="No"> No</label>
+          <label><input type="radio" name="hasLung" value="Yes"> Yes</label>
+        </div>
+        <div class="cond-grid conditional-section" data-haslung="Yes" id="cond-lung">
+          <label><input type="checkbox" name="cond_asthma" value="yes"> Asthma</label>
+          <label><input type="checkbox" name="cond_copd" value="yes"> COPD</label>
+          <label><input type="checkbox" name="cond_emphysema" value="yes"> Emphysema</label>
+          <label><input type="checkbox" name="cond_pulmonary_embolism" value="yes"> Pulmonary embolism (blood clot in lung)</label>
+        </div>
+      </div>
+
+      <div class="cond-subsection-wrap">
+        <div class="chk-group">
+          <span>Any gastro intestinal disease?</span>
+          <label><input type="radio" name="hasGI" value="No"> No</label>
+          <label><input type="radio" name="hasGI" value="Yes"> Yes</label>
+        </div>
+        <div class="cond-grid conditional-section" data-hasgi="Yes" id="cond-gi">
+          <label><input type="checkbox" name="cond_heart_burn" value="yes"> Heart burn</label>
+          <label><input type="checkbox" name="cond_ibs" value="yes"> Irritable bowel syndrome (IBS)</label>
+          <label><input type="checkbox" name="cond_ulcerative_colitis" value="yes"> Ulcerative colitis</label>
+          <label><input type="checkbox" name="cond_crohns" value="yes"> Crohn's disease</label>
+          <label><input type="checkbox" name="cond_celiac" value="yes"> Celiac disease</label>
+          <div class="form-row" style="margin-top:0.5rem">
+            <label>Other:</label>
+            <input type="text" name="cond_gi_other" placeholder="Please specify">
+          </div>
+        </div>
+      </div>
+
+      <div class="cond-subsection-wrap">
+        <div class="chk-group">
+          <span>Any liver disease?</span>
+          <label><input type="radio" name="hasLiver" value="No"> No</label>
+          <label><input type="radio" name="hasLiver" value="Yes"> Yes</label>
+        </div>
+        <div class="cond-grid conditional-section" data-hasliver="Yes" id="cond-liver">
+          <label><input type="checkbox" name="cond_fatty_liver" value="yes"> Fatty liver</label>
+          <label><input type="checkbox" name="cond_cirrhosis" value="yes"> Cirrhosis</label>
+          <label><input type="checkbox" name="cond_hep_c" value="yes"> Hepatitis C</label>
+          <div class="cond-details conditional-section" data-cond="cond_hep_c" style="margin-left:1.5rem;margin-top:0.25rem">
+            <label><input type="checkbox" name="hepCTreated" value="yes"> Treated</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="cond-subsection-wrap">
+        <div class="chk-group">
+          <span>Any mental health problems?</span>
+          <label><input type="radio" name="hasMentalHealth" value="No"> No</label>
+          <label><input type="radio" name="hasMentalHealth" value="Yes"> Yes</label>
+        </div>
+        <div class="cond-grid conditional-section" data-hasmentalhealth="Yes" id="cond-mental">
+          <label><input type="checkbox" name="cond_anxiety" value="yes"> Anxiety</label>
+          <label><input type="checkbox" name="cond_depression" value="yes"> Depression</label>
+          <label><input type="checkbox" name="cond_panic_attacks" value="yes"> Panic attacks</label>
+          <label><input type="checkbox" name="cond_ptsd" value="yes"> PTSD</label>
+          <label><input type="checkbox" name="cond_schizophrenia" value="yes"> Schizophrenia</label>
+          <label><input type="checkbox" name="cond_bipolar" value="yes"> Bipolar disorder</label>
+        </div>
+      </div>
+
+      <div class="cond-subsection-wrap">
+        <div class="chk-group">
+          <span>Any rheumatologic / arthritis / pain problems?</span>
+          <label><input type="radio" name="hasRheum" value="No"> No</label>
+          <label><input type="radio" name="hasRheum" value="Yes"> Yes</label>
+        </div>
+        <div class="cond-grid conditional-section" data-hasrheum="Yes" id="cond-rheum">
+          <label><input type="checkbox" name="cond_osteoarthritis" value="yes"> Osteoarthritis</label>
+          <label><input type="checkbox" name="cond_rheumatoid_arthritis" value="yes"> Rheumatoid arthritis</label>
+          <label><input type="checkbox" name="cond_gout" value="yes"> Gout</label>
+          <label><input type="checkbox" name="cond_osteoporosis" value="yes"> Osteoporosis</label>
+          <label><input type="checkbox" name="cond_lupus" value="yes"> Lupus</label>
+          <label><input type="checkbox" name="cond_chronic_pain" value="yes"> Chronic pain</label>
+          <label><input type="checkbox" name="cond_chronic_fatigue" value="yes"> Chronic fatigue syndrome</label>
+        </div>
+      </div>
+
+      <div class="cond-subsection-wrap">
+        <div class="chk-group">
+          <span>Any thyroid disorders?</span>
+          <label><input type="radio" name="hasThyroid" value="No"> No</label>
+          <label><input type="radio" name="hasThyroid" value="Yes"> Yes</label>
+        </div>
+        <div class="cond-grid conditional-section" data-hasthyroid="Yes" id="cond-thyroid">
+          <label><input type="checkbox" name="cond_hypothyroidism" value="yes"> Hypothyroidism (underactive)</label>
+          <label><input type="checkbox" name="cond_hyperthyroidism" value="yes"> Hyperthyroidism (overactive)</label>
+        </div>
+      </div>
+
+      <div class="cond-subsection-wrap">
+        <div class="chk-group">
+          <span>Any cancer?</span>
+          <label><input type="radio" name="hasCancer" value="No"> No</label>
+          <label><input type="radio" name="hasCancer" value="Yes"> Yes</label>
+        </div>
+        <div class="cond-grid conditional-section" data-hascancer="Yes" id="cond-cancer">
+          <label><input type="checkbox" name="cond_breast_cancer" value="yes"> Breast cancer</label>
+          <label><input type="checkbox" name="cond_prostate_cancer" value="yes"> Prostate cancer</label>
+          <label><input type="checkbox" name="cond_bowel_cancer" value="yes"> Bowel cancer</label>
+          <label><input type="checkbox" name="cond_lung_cancer" value="yes"> Lung cancer</label>
+          <div class="form-row" style="margin-top:0.5rem">
+            <label>Other:</label>
+            <input type="text" name="cond_cancer_other" placeholder="Please specify">
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">OTHER CONDITIONS</h2>
+      <p style="font-size:0.9rem;margin:0.5rem 0">List any other medical conditions not covered above:</p>
+      <table class="fam-table other-conditions-table">
+        <thead>
+          <tr>
+            <th>Condition Details</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="other-conditions-rows">
+          <tr class="other-condition-row">
+            <td><input type="text" name="other_condition_0_details" placeholder="e.g. Migraine, Fibromyalgia"></td>
+            <td><button type="button" class="btn-remove-row" title="Remove row">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" id="add-other-condition-row" class="btn-add-row">+ Add row</button>
+
+      <h2 class="section-title">PAST SURGERIES</h2>
+      <p style="font-size:0.9rem;margin:0.5rem 0">List past surgeries:</p>
+      <table class="fam-table surgery-table">
+        <thead>
+          <tr>
+            <th>Surgery Details</th>
+            <th>Year</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="surgery-rows">
+          <tr class="surgery-row">
+            <td><input type="text" name="surgery_0_details" placeholder="e.g. Appendectomy"></td>
+            <td><input type="text" name="surgery_0_year" placeholder="Year" class="input-xs"></td>
+            <td><button type="button" class="btn-remove-row" title="Remove row">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" id="add-surgery-row" class="btn-add-row">+ Add row</button>
+
+      <h2 class="section-title">FAMILY HISTORY</h2>
+      <label><input type="checkbox" name="adopted" value="yes"> Adopted (list only info known re. biological relatives)</label>
+      <p style="font-size:0.85rem;margin:0.5rem 0;color:var(--text-muted)">Please list close relatives and rough ages (or age at time of death). Especially list any history of heart disease, sudden death, diabetes, cholesterol, high BP, cancer.</p>
+      <table class="fam-table">
+        <thead>
+          <tr>
+            <th>Relation</th>
+            <th>Status</th>
+            <th>Age</th>
+            <th>Medical conditions / Cause of death</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="family-rows">
+          <tr class="fam-row">
+            <td>
+              <select name="family_0_relation">
+                <option value="">Select</option>
+                <option value="Father">Father</option>
+                <option value="Mother">Mother</option>
+                <option value="Brother">Brother</option>
+                <option value="Sister">Sister</option>
+                <option value="Son">Son</option>
+                <option value="Daughter">Daughter</option>
+              </select>
+            </td>
+            <td>
+              <select name="family_0_status">
+                <option value="">Select</option>
+                <option value="Living at">Living at</option>
+                <option value="Passed at">Passed at</option>
+              </select>
+            </td>
+            <td><input type="text" name="family_0_age" placeholder="Age"></td>
+            <td><input type="text" name="family_0_conditions" placeholder="Conditions"></td>
+            <td><button type="button" class="btn-remove-row" title="Remove row">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" id="add-family-row" class="btn-add-row">+ Add row</button>
+
+      <div class="submit-wrap">
+        <button type="submit" id="submit-btn">Submit Form</button>
+        <div id="message" class="message" role="alert"></div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById("intake-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const messageEl = document.getElementById("message");
+
+    function updateConditionalSections() {
+      const tobacco = form.querySelector('input[name="tobacco"]:checked')?.value || "";
+      const alcohol = form.querySelector('input[name="alcohol"]:checked')?.value || "";
+      const otherDrugs = form.querySelector('input[name="otherDrugs"]:checked')?.value || "";
+      document.querySelectorAll("[data-tobacco]").forEach((el) => {
+        el.classList.toggle("visible", el.dataset.tobacco === tobacco);
+      });
+      document.querySelectorAll("[data-alcohol]").forEach((el) => {
+        const showWhen = (el.dataset.alcohol || "").split(",").map((s) => s.trim());
+        el.classList.toggle("visible", showWhen.includes(alcohol));
+      });
+      document.querySelectorAll("[data-otherdrugs]").forEach((el) => {
+        el.classList.toggle("visible", el.dataset.otherdrugs === otherDrugs);
+      });
+    }
+
+    form.querySelectorAll('input[name="tobacco"], input[name="alcohol"], input[name="otherDrugs"]').forEach((input) => {
+      input.addEventListener("change", updateConditionalSections);
+    });
+    form.addEventListener("reset", () => setTimeout(updateConditionalSections, 0));
+    updateConditionalSections();
+
+    function updateMedicalCondSections() {
+      const pairs = [
+        ["hasLung", "haslung"],
+        ["hasGI", "hasgi"],
+        ["hasLiver", "hasliver"],
+        ["hasMentalHealth", "hasmentalhealth"],
+        ["hasRheum", "hasrheum"],
+        ["hasThyroid", "hasthyroid"],
+        ["hasCancer", "hascancer"],
+      ];
+      pairs.forEach(([name, dataAttr]) => {
+        const val = form.querySelector(`input[name="${name}"]:checked`)?.value || "";
+        document.querySelectorAll(`[data-${dataAttr}]`).forEach((el) => {
+          el.classList.toggle("visible", el.dataset[dataAttr] === val);
+        });
+      });
+    }
+    form.querySelectorAll('input[name="hasLung"], input[name="hasGI"], input[name="hasLiver"], input[name="hasMentalHealth"], input[name="hasRheum"], input[name="hasThyroid"], input[name="hasCancer"]').forEach((input) => {
+      input.addEventListener("change", updateMedicalCondSections);
+    });
+    form.addEventListener("reset", () => setTimeout(updateMedicalCondSections, 0));
+    updateMedicalCondSections();
+
+    function updateCondDetails() {
+      document.querySelectorAll("[data-cond]").forEach((el) => {
+        const name = el.dataset.cond;
+        const cb = form.querySelector(`input[name="${name}"]`);
+        el.classList.toggle("visible", cb?.checked ?? false);
+      });
+    }
+    form.querySelectorAll('input[name="cond_diabetes"], input[name="cond_sleep_apnea"], input[name="cond_hep_c"], input[name="cond_menopausal"]').forEach((input) => {
+      input.addEventListener("change", updateCondDetails);
+    });
+    form.addEventListener("reset", () => setTimeout(updateCondDetails, 0));
+    updateCondDetails();
+
+    const allergyTableSection = document.getElementById("allergy-table-section");
+    const noAllergiesCheckbox = form.querySelector('input[name="noAllergies"]');
+    function updateAllergySection() {
+      allergyTableSection.classList.toggle("allergy-hidden", noAllergiesCheckbox?.checked ?? false);
+    }
+    noAllergiesCheckbox?.addEventListener("change", updateAllergySection);
+    form.addEventListener("reset", () => setTimeout(updateAllergySection, 0));
+    updateAllergySection();
+
+    const familyRows = document.getElementById("family-rows");
+    const addFamilyRowBtn = document.getElementById("add-family-row");
+    function renumberFamilyRows() {
+      familyRows.querySelectorAll(".fam-row").forEach((tr, i) => {
+        tr.querySelectorAll("select")[0].name = `family_${i}_relation`;
+        tr.querySelectorAll("select")[1].name = `family_${i}_status`;
+        tr.querySelectorAll("input[type='text']")[0].name = `family_${i}_age`;
+        tr.querySelectorAll("input[type='text']")[1].name = `family_${i}_conditions`;
+      });
+    }
+    const famRowTemplate = () => {
+      const tr = document.createElement("tr");
+      tr.className = "fam-row";
+      const i = familyRows.querySelectorAll(".fam-row").length;
+      tr.innerHTML = `
+        <td>
+          <select name="family_${i}_relation">
+            <option value="">Select</option>
+            <option value="Father">Father</option>
+            <option value="Mother">Mother</option>
+            <option value="Brother">Brother</option>
+            <option value="Sister">Sister</option>
+            <option value="Son">Son</option>
+            <option value="Daughter">Daughter</option>
+          </select>
+        </td>
+        <td>
+          <select name="family_${i}_status">
+            <option value="">Select</option>
+            <option value="Living at">Living at</option>
+            <option value="Passed away at">Passed away at</option>
+          </select>
+        </td>
+        <td><input type="text" name="family_${i}_age" placeholder="Age"></td>
+        <td><input type="text" name="family_${i}_conditions" placeholder="Conditions"></td>
+        <td><button type="button" class="btn-remove-row" title="Remove row">×</button></td>
+      `;
+      return tr;
+    };
+    addFamilyRowBtn.addEventListener("click", () => {
+      familyRows.appendChild(famRowTemplate());
+      renumberFamilyRows();
+    });
+    familyRows.addEventListener("click", (e) => {
+      if (e.target.classList.contains("btn-remove-row") && e.target.closest(".fam-row") && familyRows.querySelectorAll(".fam-row").length > 1) {
+        e.target.closest(".fam-row").remove();
+        renumberFamilyRows();
+      }
+    });
+
+    const allergyRows = document.getElementById("allergy-rows");
+    const addAllergyRowBtn = document.getElementById("add-allergy-row");
+    function renumberAllergyRows() {
+      allergyRows.querySelectorAll(".allergy-row").forEach((tr, i) => {
+        tr.querySelectorAll("input")[0].name = `allergy_${i}_allergen`;
+        tr.querySelectorAll("input")[1].name = `allergy_${i}_reaction`;
+      });
+    }
+    const allergyRowTemplate = () => {
+      const tr = document.createElement("tr");
+      tr.className = "allergy-row";
+      const i = allergyRows.querySelectorAll(".allergy-row").length;
+      tr.innerHTML = `
+        <td><input type="text" name="allergy_${i}_allergen" placeholder="e.g. Penicillin"></td>
+        <td><input type="text" name="allergy_${i}_reaction" placeholder="e.g. Rash, swelling"></td>
+        <td><button type="button" class="btn-remove-row" title="Remove row">×</button></td>
+      `;
+      return tr;
+    };
+    addAllergyRowBtn.addEventListener("click", () => {
+      allergyRows.appendChild(allergyRowTemplate());
+      renumberAllergyRows();
+    });
+    allergyRows.addEventListener("click", (e) => {
+      if (e.target.classList.contains("btn-remove-row") && e.target.closest(".allergy-row") && allergyRows.querySelectorAll(".allergy-row").length > 1) {
+        e.target.closest(".allergy-row").remove();
+        renumberAllergyRows();
+      }
+    });
+
+    const otherConditionsRows = document.getElementById("other-conditions-rows");
+    const addOtherConditionRowBtn = document.getElementById("add-other-condition-row");
+    function renumberOtherConditionRows() {
+      otherConditionsRows.querySelectorAll(".other-condition-row").forEach((tr, i) => {
+        tr.querySelector("input").name = `other_condition_${i}_details`;
+      });
+    }
+    const otherConditionRowTemplate = () => {
+      const tr = document.createElement("tr");
+      tr.className = "other-condition-row";
+      const i = otherConditionsRows.querySelectorAll(".other-condition-row").length;
+      tr.innerHTML = `
+        <td><input type="text" name="other_condition_${i}_details" placeholder="e.g. Migraine, Fibromyalgia"></td>
+        <td><button type="button" class="btn-remove-row" title="Remove row">×</button></td>
+      `;
+      return tr;
+    };
+    addOtherConditionRowBtn.addEventListener("click", () => {
+      otherConditionsRows.appendChild(otherConditionRowTemplate());
+      renumberOtherConditionRows();
+    });
+    otherConditionsRows.addEventListener("click", (e) => {
+      if (e.target.classList.contains("btn-remove-row") && e.target.closest(".other-condition-row") && otherConditionsRows.querySelectorAll(".other-condition-row").length > 1) {
+        e.target.closest(".other-condition-row").remove();
+        renumberOtherConditionRows();
+      }
+    });
+
+    const surgeryRows = document.getElementById("surgery-rows");
+    const addSurgeryRowBtn = document.getElementById("add-surgery-row");
+    function renumberSurgeryRows() {
+      surgeryRows.querySelectorAll(".surgery-row").forEach((tr, i) => {
+        tr.querySelectorAll("input")[0].name = `surgery_${i}_details`;
+        tr.querySelectorAll("input")[1].name = `surgery_${i}_year`;
+      });
+    }
+    const surgeryRowTemplate = () => {
+      const tr = document.createElement("tr");
+      tr.className = "surgery-row";
+      const i = surgeryRows.querySelectorAll(".surgery-row").length;
+      tr.innerHTML = `
+        <td><input type="text" name="surgery_${i}_details" placeholder="e.g. Appendectomy"></td>
+        <td><input type="text" name="surgery_${i}_year" placeholder="Year" class="input-xs"></td>
+        <td><button type="button" class="btn-remove-row" title="Remove row">×</button></td>
+      `;
+      return tr;
+    };
+    addSurgeryRowBtn.addEventListener("click", () => {
+      surgeryRows.appendChild(surgeryRowTemplate());
+      renumberSurgeryRows();
+    });
+    surgeryRows.addEventListener("click", (e) => {
+      if (e.target.classList.contains("btn-remove-row") && e.target.closest(".surgery-row") && surgeryRows.querySelectorAll(".surgery-row").length > 1) {
+        e.target.closest(".surgery-row").remove();
+        renumberSurgeryRows();
+      }
+    });
+
+    function collectFormData() {
+      const data = {};
+      for (const el of form.elements) {
+        if (!el.name || el.disabled) continue;
+        const type = (el.type || "text").toLowerCase();
+        let value;
+        if (type === "checkbox") {
+          if (!el.checked) continue;
+          value = el.value || "yes";
+        } else if (type === "radio") {
+          if (!el.checked) continue;
+          value = el.value;
+        } else {
+          value = el.value;
+        }
+        if (data[el.name]) {
+          if (!Array.isArray(data[el.name])) data[el.name] = [data[el.name]];
+          data[el.name].push(value);
+        } else {
+          data[el.name] = value;
+        }
+      }
+      return data;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      messageEl.className = "message";
+      messageEl.textContent = "";
+      messageEl.removeAttribute("role");
+
+      const data = collectFormData();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Sending…";
+
+      try {
+        const res = await fetch("/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        const json = await res.json();
+
+        if (json.success) {
+          messageEl.className = "message success";
+          messageEl.textContent = json.message || "Thank you! Your form has been submitted successfully.";
+          form.reset();
+        } else {
+          messageEl.className = "message error";
+          messageEl.textContent = json.message || "Something went wrong. Please try again.";
+          messageEl.setAttribute("role", "alert");
+        }
+      } catch (err) {
+        messageEl.className = "message error";
+        messageEl.textContent = "Could not reach the server. Please check your connection and try again.";
+        messageEl.setAttribute("role", "alert");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Form";
+      }
+    });
+  </script>
+</body>
+</html>

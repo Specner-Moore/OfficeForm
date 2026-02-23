@@ -1,0 +1,1 @@
+A patient intake form for a medical office. Upon submission, responses are sent via email using the Mailgun API. Information is formatted according to requirements specified by the doctor.
