@@ -170,31 +170,73 @@
       .form-row input[type="email"],
       .form-row input[type="number"],
       .form-row input[type="date"] { min-width: 0; flex: 1 1 100%; }
-      .form-row .input-xs, .form-row .input-sm, .form-row .input-md, .form-row .input-lg {
-        max-width: none !important;
+      /* On small screens, size classes expand to full width instead of fixed px */
+      .form-card .input-xs,
+      .form-card .input-sm,
+      .form-card .input-md,
+      .form-card .input-lg {
         width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        flex: 1 1 auto !important;
       }
+      /* Keep height (ft/in) and weight+unit as one compact row */
       .form-row .height-ft-in,
       .form-row .weight-input-group {
         display: flex;
         flex-wrap: nowrap;
         gap: 0.35rem;
         max-width: 100%;
+        width: 100%;
       }
       .form-row .height-ft-in .input-xs,
-      .form-row .weight-input-group .input-sm { flex: 1 1 auto; min-width: 0; }
+      .form-row .weight-input-group .input-sm {
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        flex: 1 1 auto !important;
+      }
       .form-row .height-cm-wrap.visible { display: block !important; }
-      .form-row .height-cm-wrap .input-sm { max-width: none; width: 100%; }
+      .form-row .height-cm-wrap .input-sm {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+      }
+      .chk-group .input-md { width: 100% !important; max-width: none !important; min-width: 0 !important; }
+      .form-card .inline-input { width: 100% !important; min-width: 0 !important; max-width: none !important; }
+      /* Override inline fixed widths so they don’t overflow on small screens */
+      .form-card input[style*="width"],
+      .form-card input[style*="min-width"] { width: 100% !important; min-width: 0 !important; max-width: 100% !important; }
       .chk-group { gap: 0.5rem; }
       .chk-group span[style*="margin-left"] { margin-left: 0 !important; margin-top: 0.25rem; width: 100%; }
+      .exercise-row { flex-wrap: wrap; }
+      .exercise-row > span:first-child { width: 100%; flex-basis: 100%; margin-bottom: 0.25rem; }
       .indent { margin-left: 0.75rem; }
       .indent-2 { margin-left: 1.5rem; }
       .cond-details[style*="margin-left"] { margin-left: 0.75rem !important; }
       .section-title { font-size: 1rem; margin-top: 1.25rem; }
-      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -0.25rem; }
-      .fam-table { font-size: 0.8rem; min-width: 280px; }
-      .fam-table th, .fam-table td { padding: 0.35rem 0.4rem; }
-      .fam-table .btn-remove-row { min-width: 44px; min-height: 44px; width: 44px; height: 44px; }
+      .table-wrap { margin: 0 -0.25rem; padding-bottom: 0.25rem; }
+      .fam-table { font-size: 0.8rem; table-layout: fixed; }
+      .fam-table th, .fam-table td { padding: 0.4rem 0.5rem; }
+      .fam-table .btn-remove-row { width: 32px; height: 32px; min-width: 32px; min-height: 32px; font-size: 1rem; box-sizing: border-box; }
+      .fam-table input, .fam-table select { font-size: 16px; }
+      .fam-table th:nth-child(5), .fam-table td:nth-child(5) { width: 40px; min-width: 40px; padding-left: 0.2rem; padding-right: 0.2rem; }
+      .allergy-table th:nth-child(3), .allergy-table td:nth-child(3) { width: 40px; min-width: 40px; padding-left: 0.2rem; padding-right: 0.2rem; }
+      .other-conditions-table th:nth-child(2), .other-conditions-table td:nth-child(2) { width: 40px; min-width: 40px; padding-left: 0.2rem; padding-right: 0.2rem; }
+      .surgery-table th:nth-child(3), .surgery-table td:nth-child(3) { width: 40px; min-width: 40px; padding-left: 0.2rem; padding-right: 0.2rem; }
+      .fam-table { min-width: 500px; }
+      .fam-table th:nth-child(1), .fam-table td:nth-child(1) { width: 100px; min-width: 100px; }
+      .fam-table th:nth-child(2), .fam-table td:nth-child(2) { width: 120px; min-width: 120px; }
+      .fam-table th:nth-child(3), .fam-table td:nth-child(3) { width: 55px; min-width: 55px; }
+      .fam-table th:nth-child(4), .fam-table td:nth-child(4) { width: 180px; min-width: 180px; }
+      .allergy-table { min-width: 288px; }
+      .allergy-table th:nth-child(1), .allergy-table td:nth-child(1) { width: 120px; min-width: 120px; }
+      .allergy-table th:nth-child(2), .allergy-table td:nth-child(2) { width: 120px; min-width: 120px; }
+      .other-conditions-table { min-width: 298px; }
+      .other-conditions-table th:nth-child(1), .other-conditions-table td:nth-child(1) { width: 250px; min-width: 250px; }
+      .surgery-table { min-width: 298px; }
+      .surgery-table th:nth-child(1), .surgery-table td:nth-child(1) { width: 160px; min-width: 160px; }
+      .surgery-table th:nth-child(2), .surgery-table td:nth-child(2) { width: 90px; min-width: 90px; }
       button[type="submit"] { width: 100%; max-width: 320px; padding: 0.85rem 1.5rem; }
       .btn-add-row { min-height: 44px; padding: 0.5rem 1rem; }
     }
@@ -349,6 +391,14 @@
       width: 240px !important;
       max-width: 240px !important;
     }
+
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      min-width: 0;
+    }
+    .table-wrap .fam-table { margin-bottom: 0; }
 
     .conditional-section { display: none; margin-bottom: 0.75rem; }
     .conditional-section.visible { display: block; }
@@ -633,7 +683,7 @@
         <label><input type="checkbox" name="weightNotSure" value="yes"> Not sure</label>
       </div>
 
-      <div class="chk-group">
+      <div class="chk-group exercise-row">
         <span>Do you get regular exercise?</span>
         <label><input type="radio" name="exercise" value="Not much"> Not much</label>
         <label><input type="radio" name="exercise" value="Yes"> Yes –</label>
