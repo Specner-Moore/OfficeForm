@@ -22,7 +22,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const CONDITION_LABELS = {
   cond_high_bp: "Hypertension",
-  cond_cholesterol: "Cholesterol problems",
+  cond_cholesterol: "Dyslipidemia",
   cond_diabetes: "Diabetes",
   cond_erectile_dysfunction: "Erectile dysfunction",
   cond_menopausal: "Post-menopausal",
@@ -31,11 +31,11 @@ const CONDITION_LABELS = {
   cond_kidney_disease: "Kidney disease",
   cond_heart_attack: "Myocardial infarction",
   cond_angina: "Angina",
-  cond_angioplasty: "Coronary angioplasty",
-  cond_cabg: "CABG",
+  cond_angioplasty: "Coronary angioplasty/stenting",
+  cond_cabg: "Coronary artery bypass grafting",
   cond_valve_surgery: "Valve surgery",
   cond_defib: "ICD",
-  cond_pacemaker: "Permanent pacemaker",
+  cond_pacemaker: "Pacemaker",
   cond_atrial_fib: "Atrial fibrillation",
   cond_heart_failure: "Heart failure",
   cond_asthma: "Asthma",
@@ -43,17 +43,17 @@ const CONDITION_LABELS = {
   cond_emphysema: "Emphysema",
   cond_pulmonary_embolism: "Pulmonary embolism",
   cond_heart_burn: "Gastroesophageal reflux",
-  cond_ibs: "IBS",
+  cond_ibs: "Irritable bowel syndrome",
   cond_ulcerative_colitis: "Ulcerative colitis",
   cond_crohns: "Crohn's disease",
   cond_celiac: "Celiac disease",
-  cond_fatty_liver: "Fatty liver",
-  cond_cirrhosis: "Cirrhosis",
+  cond_fatty_liver: "Fatty liver disease",
+  cond_cirrhosis: "Liver cirrhosis",
   cond_hep_c: "Hepatitis C",
   cond_anxiety: "Anxiety",
   cond_depression: "Depression",
   cond_panic_attacks: "Panic attacks",
-  cond_ptsd: "PTSD",
+  cond_ptsd: "Post Traumatic Stress Disorder",
   cond_schizophrenia: "Schizophrenia",
   cond_bipolar: "Bipolar disorder",
   cond_osteoarthritis: "Osteoarthritis",
@@ -92,6 +92,78 @@ function pl(n, singular, plural) {
   return (v === "1" || parseInt(v, 10) === 1) ? singular : plural;
 }
 
+/** Ensures the string ends with exactly one period (avoids double periods from user input). */
+function ensurePeriod(str) {
+  if (str == null || typeof str !== "string") return str;
+  const t = String(str).trim();
+  return t === "" ? "" : (t.endsWith(".") ? t : t + ".");
+}
+
+const LBS_PER_KG = 2.20462;
+const INCHES_PER_CM = 2.54;
+const METERS_PER_INCH = 0.0254;
+
+/** Get total height in inches from form data, or null if missing/invalid. */
+function getTotalInches(data) {
+  let totalInches = null;
+  if (data.heightInCm === "yes" || data.heightInCm === true) {
+    const cm = parseFloat(String(data.heightCm || "").trim(), 10);
+    if (!Number.isNaN(cm) && cm > 0) totalInches = cm / INCHES_PER_CM;
+  } else {
+    const feet = parseInt(String(data.heightFeet || "").trim(), 10);
+    const inches = parseFloat(String(data.heightInches || "").trim(), 10);
+    if (!Number.isNaN(feet) && feet >= 0 && !Number.isNaN(inches) && inches >= 0) {
+      totalInches = feet * 12 + inches;
+    }
+  }
+  return totalInches != null && totalInches >= 0 ? totalInches : null;
+}
+
+/** Format height for email as "5'10" (70in)". Uses feet/inches or converts cm to inches. */
+function formatHeightForEmail(data) {
+  const totalInches = getTotalInches(data);
+  if (totalInches == null) return null;
+  const f = Math.floor(totalInches / 12);
+  const i = Math.round(totalInches % 12);
+  const totalInchesRounded = f * 12 + i;
+  return `${f}'${i}" (${totalInchesRounded}in)`;
+}
+
+/** Get weight in kg from form data (weight value + weightUnit). Returns null if missing/invalid. */
+function getWeightKg(data) {
+  const w = parseFloat(String(data.weight || "").trim(), 10);
+  if (Number.isNaN(w) || w <= 0) return null;
+  const unit = (data.weightUnit || "lbs").toLowerCase();
+  return unit === "kg" ? w : w / LBS_PER_KG;
+}
+
+/** Get weight in lbs from form data. Returns null if missing/invalid. */
+function getWeightLbs(data) {
+  const w = parseFloat(String(data.weight || "").trim(), 10);
+  if (Number.isNaN(w) || w <= 0) return null;
+  const unit = (data.weightUnit || "lbs").toLowerCase();
+  return unit === "lbs" ? w : w * LBS_PER_KG;
+}
+
+/** Format weight for email as "x lbs (y kg)" with conversion. */
+function formatWeightForEmail(data) {
+  const lbs = getWeightLbs(data);
+  const kg = getWeightKg(data);
+  if (lbs == null || kg == null) return null;
+  return `${Math.round(lbs)} lbs (${kg.toFixed(1)} kg)`;
+}
+
+/** Compute BMI from form data. Returns formatted string (e.g. "22.5") or null if height/weight missing. */
+function getBMIForEmail(data) {
+  const weightKg = getWeightKg(data);
+  const totalInches = getTotalInches(data);
+  if (weightKg == null || totalInches == null) return null;
+  const heightM = totalInches * METERS_PER_INCH;
+  if (heightM <= 0) return null;
+  const bmi = weightKg / (heightM * heightM);
+  return bmi.toFixed(1);
+}
+
 function buildEmailBody(data) {
   const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []);
   const val = (k) => fmt(k, data[k]);
@@ -122,11 +194,14 @@ function buildEmailBody(data) {
     ["Preferred pharmacy", val("preferredPharmacy")],
   ]);
 
-  body += section("HEIGHT / WEIGHT / HOBBIES", [
-    ["Height", val("height")],
-    ["Weight", val("weight")],
+  const heightDisplay = formatHeightForEmail(data);
+  const weightDisplay = formatWeightForEmail(data);
+  const bmiDisplay = getBMIForEmail(data);
+  body += section("HEIGHT / WEIGHT", [
+    ["Height", heightDisplay],
+    ["Weight", weightDisplay],
+    ["BMI", bmiDisplay],
     ["Weight not sure", data.weightNotSure === "yes" ? "Yes" : null],
-    ["Hobbies", val("hobbies")],
   ]);
 
   let conditions = Object.entries(CONDITION_LABELS)
@@ -184,26 +259,35 @@ function buildEmailBody(data) {
 
   const pmhItems = [...conditions, ...otherCondEntries, ...surgeryEntries];
   if (pmhItems.length) {
-    body += "\n\nPAST MEDICAL HISTORY:\n" + pmhItems.map((item) => `${item}.`).join("\n") + "\n";
+    body += "\n\nPAST MEDICAL HISTORY:\n" + pmhItems.map((item) => ensurePeriod(item)).join("\n") + "\n";
   }
 
   const socialLines = [];
-  const occ = (data.occupation || "").toString().trim();
-  if (occ) {
-    const status = val("occupationStatus");
-    socialLines.push(status ? `${occ} (${status}).` : `${occ}.`);
-  }
   const res = (data.residence || "").toString().trim();
   const withWho = (data.livesWith || "").toString().trim();
-  if (res || withWho) {
-    socialLines.push(withWho ? `Lives in ${res.toLowerCase() || "—"} with ${withWho}.` : `Lives in ${res.toLowerCase()}.`);
+  if (res) {
+    socialLines.push(ensurePeriod(withWho ? `Lives in ${res.toLowerCase() || "—"} with ${withWho.toLowerCase()}` : `Lives in ${res.toLowerCase()}`));
+  } else if (withWho) {
+    socialLines.push(ensurePeriod(`Lives with ${withWho.toLowerCase()}`));
   }
   const marital = val("maritalStatus");
-  if (marital) socialLines.push(marital === "Partner" ? "Has a partner." : `${marital}.`);
+  if (marital) socialLines.push(marital === "Partner" ? "Has a partner." : ensurePeriod(marital));
   let edu = (data.education || "").toString().trim();
   if (data.student === "yes") edu = edu ? `${edu} (student)` : "Student";
   if (data.readingDifficulties === "yes") edu = edu ? `${edu} (reading difficulties)` : "Reading difficulties";
-  if (edu) socialLines.push(`Education: ${edu}.`);
+  if (edu) socialLines.push(`Education: ${ensurePeriod(edu)}`);
+  const occ = (data.occupation || "").toString().trim();
+  if (occ) {
+    const status = val("occupationStatus");
+    socialLines.push(ensurePeriod(status ? `${occ} (${status})` : occ));
+  }
+  const rxIns = val("rxInsurance");
+  const rxPlan = val("rxInsurancePlan");
+  if (rxIns) {
+    socialLines.push(ensurePeriod(rxIns === "Private" && rxPlan ? `Prescription insurance: ${rxIns} (${rxPlan})` : `Prescription insurance: ${rxIns}`));
+  } else if (rxPlan) {
+    socialLines.push(ensurePeriod(`Prescription insurance: ${rxPlan}`));
+  }
   const tobacco = val("tobacco");
   if (tobacco && tobacco !== "Never smoked") {
     if (tobacco === "Former") {
@@ -214,9 +298,9 @@ function buildEmailBody(data) {
       const packWord = pl(packs, "pack", "packs");
       const yearWord = pl(years, "year", "years");
       const nic = parts.length >= 3
-        ? `Former smoker: quit ${year} after ${packs} ${packWord} a day for ${years} ${yearWord}.`
-        : parts.length ? `Former smoker: quit ${parts.join(", ")}.` : "Former smoker.";
-      socialLines.push(nic);
+        ? `Former smoker: quit ${year} after ${packs} ${packWord} a day for ${years} ${yearWord}`
+        : parts.length ? `Former smoker: quit ${parts.join(", ")}` : "Former smoker";
+      socialLines.push(ensurePeriod(nic));
     } else if (tobacco === "Current") {
       const smokeType = arr(data.smokeType).join(", ") || "nicotine";
       const packs = val("currentPacksPerDay");
@@ -224,11 +308,11 @@ function buildEmailBody(data) {
       const packWord = pl(packs, "pack", "packs");
       const yearWord = pl(years, "year", "years");
       const nic = packs && years
-        ? `Uses ${smokeType}: ${packs} ${packWord} a day for ${years} ${yearWord}.`
-        : packs || years ? `Uses ${smokeType}: ${[packs, years].filter(Boolean).join(", ")}.` : `Uses ${smokeType}.`;
-      socialLines.push(nic);
+        ? `Uses ${smokeType}: ${packs} ${packWord} a day for ${years} ${yearWord}`
+        : packs || years ? `Uses ${smokeType}: ${[packs, years].filter(Boolean).join(", ")}` : `Uses ${smokeType}`;
+      socialLines.push(ensurePeriod(nic));
     } else {
-      socialLines.push(`Nicotine use: ${tobacco}.`);
+      socialLines.push(ensurePeriod(`Nicotine use: ${tobacco}`));
     }
   }
   const alcohol = val("alcohol");
@@ -238,9 +322,9 @@ function buildEmailBody(data) {
     const period = per === "day" ? "day" : "week";
     const drinkWord = pl(drinks, "drink", "drinks");
     const alc = drinks
-      ? `${drinks} alcoholic ${drinkWord} per ${period}.${alcohol === "Struggle" ? " (struggling)" : ""}`
-      : `Alcohol use: ${alcohol}.${alcohol === "Struggle" ? " (struggling)" : ""}`;
-    socialLines.push(alc);
+      ? `${drinks} alcoholic ${drinkWord} per ${period}${alcohol === "Struggle" ? " (struggling)" : ""}`
+      : `Alcohol use: ${alcohol}${alcohol === "Struggle" ? " (struggling)" : ""}`;
+    socialLines.push(ensurePeriod(alc));
   }
   const marijuana = val("marijuana");
   if (marijuana && marijuana !== "None") {
@@ -254,29 +338,25 @@ function buildEmailBody(data) {
     const drugList = types.length
       ? types.map((t) => (t === "Other" ? other : t)).filter(Boolean).join(", ") || other
       : other;
-    socialLines.push(drugList ? `Uses ${drugList.toLowerCase()}.` : "Uses other drugs.");
+    socialLines.push(ensurePeriod(drugList ? `Uses ${drugList.toLowerCase()}` : "Uses other drugs"));
   }
   const caffeine = (data.caffeinePerDay || "").toString().trim();
   if (caffeine) {
     const drinkWord = pl(caffeine, "caffeinated drink", "caffeinated drinks");
-    socialLines.push(`${caffeine} ${drinkWord} per day.`);
+    socialLines.push(ensurePeriod(`${caffeine} ${drinkWord} per day`));
   }
   const exercise = val("exercise");
   if (exercise === "Not much") {
     socialLines.push("Does not exercise.");
   } else if (exercise === "Yes") {
     const exDetails = (data.exerciseDetails || "").toString().trim();
-    socialLines.push(exDetails ? `Exercise: ${exDetails}.` : "Exercises.");
+    socialLines.push(exDetails ? `Exercise: ${ensurePeriod(exDetails)}` : "Exercises.");
   } else if (exercise) {
-    socialLines.push(`Exercise: ${exercise}.`);
+    socialLines.push(ensurePeriod(`Exercise: ${exercise}`));
   }
-  const rxIns = val("rxInsurance");
-  const rxPlan = val("rxInsurancePlan");
-  if (rxIns) {
-    socialLines.push(rxIns === "Private" && rxPlan ? `Prescription insurance: ${rxIns} (${rxPlan}).` : `Prescription insurance: ${rxIns}.`);
-  } else if (rxPlan) {
-    socialLines.push(`Prescription insurance: ${rxPlan}.`);
-  }
+
+  const hobbies = (data.hobbies || "").toString().trim();
+  if (hobbies) socialLines.push(`Hobbies: ${ensurePeriod(hobbies)}`);
   if (socialLines.length) {
     body += "\nSOCIAL HISTORY:\n" + socialLines.join("\n") + "\n";
   }
@@ -353,6 +433,8 @@ app.post("/api/submit", async (req, res) => {
       subject,
       text: emailBody,
       html: `<pre style="font-family:sans-serif;white-space:pre-wrap;">${emailBody.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`,
+      "o:require-tls": true, // only deliver to recipient mail server over TLS; do not fall back to plaintext
+      "o:skip-verification": false,
     });
 
     return res.json({ success: true, message: "Form submitted successfully." });

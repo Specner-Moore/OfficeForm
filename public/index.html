@@ -38,7 +38,8 @@
     header { text-align: center; margin-bottom: 2rem; }
 
     h1 { font-size: 1.75rem; font-weight: 700; margin: 0 0 0.25rem; }
-    .subtitle { color: var(--text-muted); font-size: 0.95rem; }
+    .subtitle { color: var(--text); font-size: 0.95rem; margin-bottom: 0.5rem; }
+    .header-note { color: var(--text-muted); font-size: 0.85rem; margin: 0; max-width: 42rem; margin-left: auto; margin-right: auto; }
 
     .form-card {
       background: var(--card);
@@ -144,6 +145,58 @@
 
     @media (max-width: 600px) {
       .grid-2, .grid-3, .cond-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem 0.75rem; }
+      .container { padding: 0; }
+      header { margin-bottom: 1.5rem; }
+      h1 { font-size: 1.4rem; }
+      .subtitle, .header-note { font-size: 0.9rem; padding-left: 0.25rem; padding-right: 0.25rem; }
+      .header-note { word-wrap: break-word; overflow-wrap: break-word; }
+      .office-info { font-size: 0.85rem; }
+      .office-info .name { font-size: 1rem; }
+      .form-card { padding: 1.25rem; margin-bottom: 1rem; }
+      .form-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+        margin-bottom: 1rem;
+      }
+      .form-row label:not([for]) { white-space: normal; }
+      .form-row > label:first-child { margin-bottom: 0.15rem; }
+      .form-row input[type="text"],
+      .form-row input[type="tel"],
+      .form-row input[type="email"],
+      .form-row input[type="number"],
+      .form-row input[type="date"] { min-width: 0; flex: 1 1 100%; }
+      .form-row .input-xs, .form-row .input-sm, .form-row .input-md, .form-row .input-lg {
+        max-width: none !important;
+        width: 100% !important;
+      }
+      .form-row .height-ft-in,
+      .form-row .weight-input-group {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+        max-width: 100%;
+      }
+      .form-row .height-ft-in .input-xs,
+      .form-row .weight-input-group .input-sm { flex: 1 1 auto; min-width: 0; }
+      .form-row .height-cm-wrap.visible { display: block !important; }
+      .form-row .height-cm-wrap .input-sm { max-width: none; width: 100%; }
+      .chk-group { gap: 0.5rem; }
+      .chk-group span[style*="margin-left"] { margin-left: 0 !important; margin-top: 0.25rem; width: 100%; }
+      .indent { margin-left: 0.75rem; }
+      .indent-2 { margin-left: 1.5rem; }
+      .cond-details[style*="margin-left"] { margin-left: 0.75rem !important; }
+      .section-title { font-size: 1rem; margin-top: 1.25rem; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -0.25rem; }
+      .fam-table { font-size: 0.8rem; min-width: 280px; }
+      .fam-table th, .fam-table td { padding: 0.35rem 0.4rem; }
+      .fam-table .btn-remove-row { min-width: 44px; min-height: 44px; width: 44px; height: 44px; }
+      button[type="submit"] { width: 100%; max-width: 320px; padding: 0.85rem 1.5rem; }
+      .btn-add-row { min-height: 44px; padding: 0.5rem 1rem; }
     }
 
     .cond-grid {
@@ -268,6 +321,18 @@
       max-width: 100px !important;
       flex: 0 0 auto !important;
     }
+    .weight-input-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .weight-input-group .select-unit {
+      width: auto !important;
+      min-width: 52px !important;
+      max-width: 60px !important;
+      padding: 0.4rem 0.5rem !important;
+      font-size: 0.85rem !important;
+    }
     .input-md {
       width: 240px !important;
       max-width: 240px !important;
@@ -288,20 +353,52 @@
     .conditional-section { display: none; margin-bottom: 0.75rem; }
     .conditional-section.visible { display: block; }
     #allergy-table-section.allergy-hidden { display: none; }
+
+    .office-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--primary);
+    }
+    @media (max-width: 560px) {
+      .office-info { grid-template-columns: 1fr; gap: 1rem; }
+    }
+    .office-info .name { font-weight: 600; color: var(--text); font-size: 1.1rem; margin-bottom: 0.2rem; }
+    .office-info .col p { margin: 0 0 0.25rem; }
+    .office-info a { color: var(--primary); text-decoration: none; }
+    .office-info a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
+      <div class="office-info">
+        <div class="col">
+          <div class="name">Dr Jeff Moore MD FRCPC</div>
+          <p>506-447-4041 (ph.)<br>506-457-4758 (fax)</p>
+          <p>Admin Assistant: <a href="mailto:Paula.Mowatt@HorizonNB.ca">Paula.Mowatt@HorizonNB.ca</a></p>
+        </div>
+        <div class="col">
+          <p>Internal Medicine Cardiovascular Disease<br>Heart Function Clinic</p>
+          <p>1015 Regent St, Suite 302<br>Fredericton, N.B. E3B 6H5</p>
+        </div>
+      </div>
       <h1>Patient Intake Form</h1>
-      <p class="subtitle">Thank you for providing this helpful information while waiting - it will allow me to know more about your background and save asking you so many questions</p>
+      <p class="subtitle">Thank you for providing this helpful information - it will allow me to know more about your background and save asking you so many questions</p>
+      <p class="header-note">Note that after submitting, this information will be sent directly to the office and not stored on the server. If you prefer a paper form, that is available at the office.</p>
     </header>
 
     <form id="intake-form" class="form-card">
       <h2 class="section-title">CONTACT INFORMATION</h2>
       <div class="form-row">
         <label>Full Name:</label>
-        <input type="text" name="fullName" placeholder="Full name" class="input-lg">
+        <input type="text" name="fullName" placeholder="Full name" class="input-lg" required>
         <label>Age:</label>
         <input type="number" name="age" min="1" max="140" placeholder="Age" class="input-xs">
       </div>
@@ -515,9 +612,24 @@
 
       <div class="form-row">
         <label>Height:</label>
-        <input type="text" name="height" placeholder="e.g. 5'10&quot;" class="input-sm">
+        <span class="height-ft-in">
+          <input type="number" name="heightFeet" placeholder="ft" min="0" max="9" class="input-xs" aria-label="Feet"> foot
+          <input type="number" name="heightInches" placeholder="in" min="0" max="11" class="input-xs" aria-label="Inches"> inches
+        </span>
+        <div class="height-cm-wrap conditional-section" data-heightincm="yes">
+          <input type="number" name="heightCm" placeholder="cm" class="input-sm" min="1" max="300" step="0.1" aria-label="Height in cm">
+        </div>
+        <label><input type="checkbox" name="heightInCm" value="yes" id="heightInCm"> Fill in cm instead</label>
+      </div>
+      <div class="form-row">
         <label>Weight:</label>
-        <input type="text" name="weight" placeholder="e.g. 150 lbs" class="input-sm">
+        <span class="weight-input-group">
+          <input type="number" name="weight" placeholder="e.g. 150" class="input-sm" min="1" max="999" step="0.1" aria-label="Weight">
+          <select name="weightUnit" class="select-unit" aria-label="Weight unit">
+            <option value="lbs" selected>lbs</option>
+            <option value="kg">kg</option>
+          </select>
+        </span>
         <label><input type="checkbox" name="weightNotSure" value="yes"> Not sure</label>
       </div>
 
@@ -537,6 +649,7 @@
       <label class="chk-group"><input type="checkbox" name="noAllergies" value="yes" id="noAllergies"> I have no allergies</label>
       <div id="allergy-table-section">
       <p style="font-size:0.9rem;margin:0.5rem 0">List any medication allergies or side effects and the type of reaction you had:</p>
+      <div class="table-wrap">
       <table class="fam-table allergy-table">
         <thead>
           <tr>
@@ -553,9 +666,9 @@
           </tr>
         </tbody>
       </table>
+      </div>
       <button type="button" id="add-allergy-row" class="btn-add-row">+ Add row</button>
       </div>
-
       <h2 class="section-title">MEDICAL CONDITIONS</h2>
 
       <h3 class="cond-subsection">Heart Disease Risk Factors</h3>
@@ -569,11 +682,6 @@
           <label><input type="checkbox" name="diabetesInsulin" value="yes"> On insulin</label>
           <label>Age at diagnosis: <input type="number" name="diabetesAge" class="input-xs" min="1" max="140" placeholder="Age"></label>
         </div>
-        <label><input type="checkbox" name="cond_erectile_dysfunction" value="yes"> Erectile dysfunction (ED)</label>
-        <label><input type="checkbox" name="cond_menopausal" value="yes"> Post-menopausal</label>
-        <div class="cond-details conditional-section" data-cond="cond_menopausal" style="margin-left:1.5rem;margin-top:0.25rem">
-          <label>Age at menopause: <input type="number" name="menopausalAge" class="input-xs" min="1" max="140" placeholder="Age"></label>
-        </div>
         <label><input type="checkbox" name="cond_stroke" value="yes"> Stroke</label>
         <label><input type="checkbox" name="cond_sleep_apnea" value="yes"> Sleep apnea</label>
         <div class="cond-details conditional-section" data-cond="cond_sleep_apnea" style="margin-left:1.5rem;margin-top:0.25rem">
@@ -581,7 +689,11 @@
           <label><input type="checkbox" name="sleepApneaNoTolerate" value="yes"> Didn't tolerate CPAP</label>
         </div>
         <label><input type="checkbox" name="cond_kidney_disease" value="yes"> Kidney disease</label>
-
+        <label><input type="checkbox" name="cond_erectile_dysfunction" value="yes"> Erectile dysfunction (ED)</label>
+        <label><input type="checkbox" name="cond_menopausal" value="yes"> Post-menopausal</label>
+        <div class="cond-details conditional-section" data-cond="cond_menopausal" style="margin-left:1.5rem;margin-top:0.25rem">
+          <label>Age at menopause: <input type="number" name="menopausalAge" class="input-xs" min="1" max="140" placeholder="Age"></label>
+        </div>
       </div>
 
       <h3 class="cond-subsection">Heart Problems</h3>
@@ -595,10 +707,7 @@
         <label><input type="checkbox" name="cond_pacemaker" value="yes"> Pacemaker</label>
         <label><input type="checkbox" name="cond_atrial_fib" value="yes"> Atrial fibrillation</label>
         <label><input type="checkbox" name="cond_heart_failure" value="yes"> Heart Failure</label>
-        <div class="form-row" style="margin-top:0.5rem">
-          <label>Other:</label>
-          <input type="text" name="cond_heart_other" placeholder="Please specify">
-        </div>
+        <label><input type="checkbox" name="cond_pulmonary_embolism" value="yes"> Pulmonary embolism (blood clot in lung)</label>
       </div>
 
       <div class="cond-subsection-wrap">
@@ -611,7 +720,6 @@
           <label><input type="checkbox" name="cond_asthma" value="yes"> Asthma</label>
           <label><input type="checkbox" name="cond_copd" value="yes"> COPD</label>
           <label><input type="checkbox" name="cond_emphysema" value="yes"> Emphysema</label>
-          <label><input type="checkbox" name="cond_pulmonary_embolism" value="yes"> Pulmonary embolism (blood clot in lung)</label>
         </div>
       </div>
 
@@ -715,6 +823,7 @@
 
       <h2 class="section-title">OTHER CONDITIONS</h2>
       <p style="font-size:0.9rem;margin:0.5rem 0">List any other medical conditions not covered above:</p>
+      <div class="table-wrap">
       <table class="fam-table other-conditions-table">
         <thead>
           <tr>
@@ -729,10 +838,12 @@
           </tr>
         </tbody>
       </table>
+      </div>
       <button type="button" id="add-other-condition-row" class="btn-add-row">+ Add row</button>
 
       <h2 class="section-title">PAST SURGERIES</h2>
       <p style="font-size:0.9rem;margin:0.5rem 0">List past surgeries:</p>
+      <div class="table-wrap">
       <table class="fam-table surgery-table">
         <thead>
           <tr>
@@ -749,11 +860,13 @@
           </tr>
         </tbody>
       </table>
+      </div>
       <button type="button" id="add-surgery-row" class="btn-add-row">+ Add row</button>
 
       <h2 class="section-title">FAMILY HISTORY</h2>
       <label><input type="checkbox" name="adopted" value="yes"> Adopted (list only info known re. biological relatives)</label>
       <p style="font-size:0.85rem;margin:0.5rem 0;color:var(--text-muted)">Please list close relatives and rough ages (or age at time of death). Especially list any history of heart disease, sudden death, diabetes, cholesterol, high BP, cancer.</p>
+      <div class="table-wrap">
       <table class="fam-table">
         <thead>
           <tr>
@@ -790,6 +903,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
       <button type="button" id="add-family-row" class="btn-add-row">+ Add row</button>
 
       <div class="submit-wrap">
@@ -825,6 +939,18 @@
     });
     form.addEventListener("reset", () => setTimeout(updateConditionalSections, 0));
     updateConditionalSections();
+
+    const heightInCmCheckbox = document.getElementById("heightInCm");
+    const heightFtIn = form.querySelector(".height-ft-in");
+    const heightCmWrap = form.querySelector(".height-cm-wrap");
+    function updateHeightSection() {
+      const useCm = heightInCmCheckbox?.checked ?? false;
+      if (heightFtIn) heightFtIn.style.display = useCm ? "none" : "";
+      if (heightCmWrap) heightCmWrap.classList.toggle("visible", useCm);
+    }
+    heightInCmCheckbox?.addEventListener("change", updateHeightSection);
+    form.addEventListener("reset", () => setTimeout(updateHeightSection, 0));
+    updateHeightSection();
 
     function updateMedicalCondSections() {
       const pairs = [
@@ -1039,6 +1165,16 @@
       messageEl.className = "message";
       messageEl.textContent = "";
       messageEl.removeAttribute("role");
+
+      const fullNameInput = form.querySelector('input[name="fullName"]');
+      const fullName = (fullNameInput && fullNameInput.value) ? fullNameInput.value.trim() : "";
+      if (!fullName) {
+        messageEl.className = "message error";
+        messageEl.textContent = "Please enter your full name to submit.";
+        messageEl.setAttribute("role", "alert");
+        fullNameInput && fullNameInput.focus();
+        return;
+      }
 
       const data = collectFormData();
 
