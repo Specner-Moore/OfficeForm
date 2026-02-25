@@ -432,6 +432,21 @@
     .office-info .col p { margin: 0 0 0.25rem; }
     .office-info a { color: var(--primary); text-decoration: none; }
     .office-info a:hover { text-decoration: underline; }
+
+    .photo-options { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .photo-or { color: var(--text-muted); font-size: 0.9rem; }
+    .btn-secondary { padding: 0.4rem 0.8rem; font-size: 0.9rem; background: var(--border); color: var(--text); border: none; border-radius: 6px; cursor: pointer; font-family: inherit; }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn-file-label { padding: 0.4rem 0.8rem; font-size: 0.9rem; background: var(--border); color: var(--text); border-radius: 6px; cursor: pointer; display: inline-block; }
+    .btn-file-label:hover { background: #cbd5e1; }
+    .photo-preview-wrap { margin-top: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .photo-preview-wrap img { max-width: 120px; max-height: 120px; border-radius: 6px; border: 1px solid var(--border); }
+    .btn-remove-photo { padding: 0.25rem 0.5rem; font-size: 0.85rem; background: transparent; color: var(--error); border: 1px solid var(--error); border-radius: 4px; cursor: pointer; font-family: inherit; }
+    .btn-remove-photo:hover { background: rgba(220, 38, 38, 0.1); }
+    .camera-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .camera-modal-content { background: var(--card); border-radius: 12px; padding: 1rem; max-width: 90vw; }
+    .camera-modal-content video { display: block; max-width: 100%; max-height: 60vh; border-radius: 8px; background: #000; }
+    .camera-buttons { display: flex; gap: 0.5rem; margin-top: 0.75rem; justify-content: center; }
   </style>
 </head>
 <body>
@@ -493,8 +508,26 @@
 
       <div class="form-group">
         <label>Optional: Add a photo of yourself</label>
-        <input type="file" name="photo" accept="image/*" capture="user" aria-label="Photo of yourself">
-        <p class="form-hint" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.35rem">Photo will be sent to the office with your form. On a phone, this can open the camera for a selfie.</p>
+        <div class="photo-options">
+          <button type="button" id="take-photo-btn" class="btn-secondary">Take photo with camera</button>
+          <span class="photo-or">or</span>
+          <label class="btn-file-label"><input type="file" name="photo" accept="image/*" capture="user" aria-label="Choose photo" style="position:absolute;width:0.1px;height:0.1px;opacity:0;overflow:hidden"> Choose file</label>
+        </div>
+        <div id="photo-preview-wrap" class="photo-preview-wrap" style="display:none">
+          <img id="photo-preview" alt="Your photo">
+          <button type="button" id="photo-remove-btn" class="btn-remove-photo">Remove photo</button>
+        </div>
+        <div id="camera-modal" class="camera-modal" style="display:none">
+          <div class="camera-modal-content">
+            <video id="camera-video" autoplay playsinline muted></video>
+            <canvas id="camera-canvas" style="display:none"></canvas>
+            <div class="camera-buttons">
+              <button type="button" id="camera-capture-btn" class="btn-add-row">Take photo</button>
+              <button type="button" id="camera-cancel-btn" class="btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <p class="form-hint" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.35rem">Photo will be sent to the office with your form. Uses your webcam on a computer or camera on a phone.</p>
       </div>
 
       <div class="form-row">
@@ -1233,6 +1266,80 @@
       return data;
     }
 
+    let cameraStream = null;
+    const takePhotoBtn = document.getElementById("take-photo-btn");
+    const cameraModal = document.getElementById("camera-modal");
+    const cameraVideo = document.getElementById("camera-video");
+    const cameraCanvas = document.getElementById("camera-canvas");
+    const cameraCaptureBtn = document.getElementById("camera-capture-btn");
+    const cameraCancelBtn = document.getElementById("camera-cancel-btn");
+    const photoPreviewWrap = document.getElementById("photo-preview-wrap");
+    const photoPreview = document.getElementById("photo-preview");
+    const photoRemoveBtn = document.getElementById("photo-remove-btn");
+    const photoInput = form.querySelector('input[name="photo"]');
+
+    function stopCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((t) => t.stop());
+        cameraStream = null;
+      }
+    }
+
+    function hidePreview() {
+      window._capturedPhotoBlob = null;
+      if (photoPreviewWrap) photoPreviewWrap.style.display = "none";
+      if (photoInput) photoInput.value = "";
+    }
+
+    takePhotoBtn?.addEventListener("click", async () => {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+        cameraVideo.srcObject = cameraStream;
+        cameraModal.style.display = "flex";
+      } catch (err) {
+        alert("Could not access camera. Please check permissions or use 'Choose file' instead.");
+      }
+    });
+
+    cameraCancelBtn?.addEventListener("click", () => {
+      stopCamera();
+      cameraModal.style.display = "none";
+    });
+
+    cameraCaptureBtn?.addEventListener("click", () => {
+      const w = cameraVideo.videoWidth;
+      const h = cameraVideo.videoHeight;
+      if (!w || !h) return;
+      cameraCanvas.width = w;
+      cameraCanvas.height = h;
+      const ctx = cameraCanvas.getContext("2d");
+      ctx.drawImage(cameraVideo, 0, 0);
+      cameraCanvas.toBlob((blob) => {
+        if (blob) {
+          window._capturedPhotoBlob = blob;
+          photoPreview.src = URL.createObjectURL(blob);
+          photoPreviewWrap.style.display = "flex";
+          if (photoInput) photoInput.value = "";
+        }
+        stopCamera();
+        cameraModal.style.display = "none";
+      }, "image/jpeg", 0.9);
+    });
+
+    photoRemoveBtn?.addEventListener("click", hidePreview);
+
+    photoInput?.addEventListener("change", () => {
+      if (photoInput.files && photoInput.files[0]) {
+        window._capturedPhotoBlob = null;
+        photoPreview.src = URL.createObjectURL(photoInput.files[0]);
+        photoPreviewWrap.style.display = "flex";
+      }
+    });
+
+    form.addEventListener("reset", () => {
+      setTimeout(() => { hidePreview(); }, 0);
+    });
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       messageEl.className = "message";
@@ -1252,9 +1359,13 @@
       const data = collectFormData();
       const formData = new FormData();
       formData.append("data", JSON.stringify(data));
-      const photoInput = form.querySelector('input[name="photo"]');
-      if (photoInput && photoInput.files && photoInput.files[0]) {
-        formData.append("photo", photoInput.files[0]);
+      if (window._capturedPhotoBlob) {
+        formData.append("photo", window._capturedPhotoBlob, "photo.jpg");
+      } else {
+        const photoInput = form.querySelector('input[name="photo"]');
+        if (photoInput && photoInput.files && photoInput.files[0]) {
+          formData.append("photo", photoInput.files[0]);
+        }
       }
 
       submitBtn.disabled = true;
@@ -1271,6 +1382,11 @@
         if (json.success) {
           messageEl.className = "message success";
           messageEl.textContent = json.message || "Thank you! Your form has been submitted successfully.";
+          window._capturedPhotoBlob = null;
+          const prevWrap = document.getElementById("photo-preview-wrap");
+          if (prevWrap) prevWrap.style.display = "none";
+          const photoInput = form.querySelector('input[name="photo"]');
+          if (photoInput) photoInput.value = "";
           form.reset();
         } else {
           messageEl.className = "message error";
