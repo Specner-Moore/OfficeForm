@@ -207,10 +207,10 @@
       /* Override inline fixed widths so they don’t overflow on small screens */
       .form-card input[style*="width"],
       .form-card input[style*="min-width"] { width: 100% !important; min-width: 0 !important; max-width: 100% !important; }
-      .chk-group { gap: 0.5rem; }
+      .chk-group { gap: 0.5rem; flex-wrap: wrap; }
       .chk-group span[style*="margin-left"] { margin-left: 0 !important; margin-top: 0.25rem; width: 100%; }
+      .chk-group > span:first-child { width: 100%; flex-basis: 100%; margin-bottom: 0.25rem; }
       .exercise-row { flex-wrap: wrap; }
-      .exercise-row > span:first-child { width: 100%; flex-basis: 100%; margin-bottom: 0.25rem; }
       .indent { margin-left: 0.75rem; }
       .indent-2 { margin-left: 1.5rem; }
       .cond-details[style*="margin-left"] { margin-left: 0.75rem !important; }
@@ -323,6 +323,11 @@
 
     .submit-wrap { text-align: center; margin-top: 2rem; }
 
+    @keyframes submit-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.7), 0 0 20px rgba(15, 118, 110, 0.3); }
+      50% { box-shadow: 0 0 0 14px rgba(15, 118, 110, 0), 0 0 30px rgba(15, 118, 110, 0.5); }
+    }
+
     button[type="submit"] {
       font-family: inherit;
       font-size: 1rem;
@@ -336,8 +341,12 @@
       transition: background 0.2s;
     }
 
+    button[type="submit"]:not(:disabled) {
+      animation: submit-pulse 2.5s ease-in-out infinite;
+    }
+
     button[type="submit"]:hover { background: var(--primary-hover); }
-    button[type="submit"]:disabled { opacity: 0.7; cursor: not-allowed; }
+    button[type="submit"]:disabled { opacity: 0.7; cursor: not-allowed; animation: none; }
 
     .message { padding: 1rem; border-radius: 8px; margin-top: 1rem; font-size: 0.9rem; display: none; }
     .message.success { background: #d1fae5; color: var(--success); display: block; }
@@ -430,12 +439,12 @@
     <header>
       <div class="office-info">
         <div class="col">
-          <div class="name">Dr Jeff Moore MD FRCPC</div>
+          <div class="name">Dr. Jeff Moore MD FRCPC</div>
           <p>506-447-4041 (ph.)<br>506-457-4758 (fax)</p>
           <p>Admin Assistant: <a href="mailto:Paula.Mowatt@HorizonNB.ca">Paula.Mowatt@HorizonNB.ca</a></p>
         </div>
         <div class="col">
-          <p>Internal Medicine Cardiovascular Disease<br>Heart Function Clinic</p>
+          <p>Internal Medicine<br>Cardiovascular Disease<br>Heart Function Clinic</p>
           <p>1015 Regent St, Suite 302<br>Fredericton, N.B. E3B 6H5</p>
         </div>
       </div>
@@ -598,10 +607,10 @@
       </div>
       <div class="indent conditional-section" data-tobacco="Former">
         <div class="form-row">
-          When did you quit? <input type="text" name="quitDate" class="inline-input" placeholder="Date">
+          When did you quit? <input type="text" name="quitDate" class="inline-input" placeholder="Year">
         </div>
         <div class="form-row">
-          After <input type="text" name="packsPerDay" class="inline-input" placeholder="Packs"> packs per day for <input type="text" name="yearsSmoked" class="inline-input" placeholder="Years"> years
+          After <input type="text" name="packsPerDay" class="inline-input" placeholder="Packs per day"> packs per day for <input type="text" name="yearsSmoked" class="inline-input" placeholder="Years"> years
         </div>
       </div>
       <div class="indent conditional-section" data-tobacco="Current">
@@ -612,10 +621,10 @@
           <label><input type="checkbox" name="smokeType" value="Chewing tobacco"> Chewing tobacco</label>
         </div>
         <div class="form-row">
-          How many packs per day? <input type="text" name="currentPacksPerDay" class="inline-input"> for <input type="text" name="currentYears" class="inline-input"> years
+          How many packs per day? <input type="text" name="currentPacksPerDay" class="inline-input" placeholder="packs"> for <input type="text" name="currentYears" class="inline-input" placeholder="years"> years
         </div>
         <div class="indent chk-group">
-          <label><input type="checkbox" name="quitAttempts" value="yes"> Tried to quit but restarted <input type="text" name="quitAttemptsCount" class="inline-input"> times</label>
+          <label><input type="checkbox" name="quitAttempts" value="yes"> Tried to quit<input type="text" name="quitAttemptsCount" class="inline-input"> times</label>
           <label><input type="radio" name="quitInterest" value="Interested"> Interested in quitting</label>
           <label><input type="radio" name="quitInterest" value="Not ready"> Not ready to quit at this time</label>
         </div>
@@ -629,7 +638,7 @@
       </div>
       <div class="indent conditional-section" data-alcohol="Some,Struggle">
         <div class="form-row">
-          <input type="text" name="alcoholDrinks" class="inline-input" placeholder="0"> drinks average
+          <input type="text" name="alcoholDrinks" class="inline-input" placeholder="Number of drinks"> drinks average
           <label><input type="radio" name="alcoholPer" value="day"> per day</label>
           <label><input type="radio" name="alcoholPer" value="week"> per week</label>
         </div>
@@ -968,6 +977,13 @@
     const form = document.getElementById("intake-form");
     const submitBtn = document.getElementById("submit-btn");
     const messageEl = document.getElementById("message");
+
+    form.addEventListener("focusin", (e) => {
+      const wrap = e.target.closest(".table-wrap");
+      if (wrap && (e.target.matches("input") || e.target.matches("select"))) {
+        e.target.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    });
 
     function updateConditionalSections() {
       const tobacco = form.querySelector('input[name="tobacco"]:checked')?.value || "";
