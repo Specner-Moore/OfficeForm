@@ -4,6 +4,8 @@ const cors = require("cors");
 const path = require("path");
 const formData = require("form-data");
 const Mailgun = require("mailgun.js");
+const multer = require("multer");
+const sharp = require("sharp");
 
 const mailgun = new Mailgun(formData);
 const mg = mailgun.client({
@@ -19,6 +21,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const CONDITION_LABELS = {
   cond_high_bp: "Hypertension",
@@ -307,9 +311,11 @@ function buildEmailBody(data) {
       const years = val("currentYears");
       const packWord = pl(packs, "pack", "packs");
       const yearWord = pl(years, "year", "years");
-      const nic = packs && years
+      let nic = packs && years
         ? `Uses ${smokeType}: ${packs} ${packWord} a day for ${years} ${yearWord}`
         : packs || years ? `Uses ${smokeType}: ${[packs, years].filter(Boolean).join(", ")}` : `Uses ${smokeType}`;
+      const quitInterest = val("quitInterest");
+      if (quitInterest) nic += quitInterest === "Interested" ? " (interested in quitting)" : " (not ready to quit at this time)";
       socialLines.push(ensurePeriod(nic));
     } else {
       socialLines.push(ensurePeriod(`Nicotine use: ${tobacco}`));
@@ -406,7 +412,7 @@ function buildEmailBody(data) {
   return body.trim();
 }
 
-app.post("/api/submit", async (req, res) => {
+app.post("/api/submit", upload.fields([{ name: "data" }, { name: "photo", maxCount: 1 }]), async (req, res) => {
   const apiKey = process.env.MAILGUN_API_KEY;
   const domain = process.env.MAILGUN_DOMAIN;
   const officeEmail = process.env.OFFICE_EMAIL;
@@ -421,21 +427,45 @@ app.post("/api/submit", async (req, res) => {
     });
   }
 
-  const formData = req.body || {};
-  const emailBody = buildEmailBody(formData);
-  const displayName = formData.preferredName || formData.fullName || "Unknown";
+  let formDataParsed = {};
+  try {
+    if (req.body?.data) {
+      formDataParsed = typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body.data;
+    } else if (req.body && typeof req.body === "object" && "fullName" in req.body) {
+      formDataParsed = req.body;
+    }
+  } catch {
+    return res.status(400).json({ success: false, message: "Invalid form data." });
+  }
+
+  const emailBody = buildEmailBody(formDataParsed);
+  const displayName = formDataParsed.preferredName || formDataParsed.fullName || "Unknown";
   const subject = `New Patient Form: ${displayName} - ${new Date().toLocaleDateString()}`;
 
+  const opts = {
+    from: `${fromName} <${fromEmail}>`,
+    to: [officeEmail],
+    subject,
+    text: emailBody,
+    html: `<pre style="font-family:sans-serif;white-space:pre-wrap;">${emailBody.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`,
+    "o:require-tls": true,
+  };
+
+  const photoFile = req.files?.photo?.[0];
+  if (photoFile && photoFile.buffer) {
+    try {
+      const compressed = await sharp(photoFile.buffer)
+        .resize(800, 800, { fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+      opts.attachment = [{ filename: "patient-photo.jpg", data: compressed }];
+    } catch (err) {
+      console.error("Image compress error:", err);
+    }
+  }
+
   try {
-    await mg.messages.create(domain, {
-      from: `${fromName} <${fromEmail}>`,
-      to: [officeEmail],
-      subject,
-      text: emailBody,
-      html: `<pre style="font-family:sans-serif;white-space:pre-wrap;">${emailBody.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`,
-      "o:require-tls": true, // only deliver to recipient mail server over TLS; do not fall back to plaintext
-      "o:skip-verification": false,
-    });
+    await mg.messages.create(domain, opts);
 
     return res.json({ success: true, message: "Form submitted successfully." });
   } catch (err) {

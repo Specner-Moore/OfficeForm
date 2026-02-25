@@ -444,7 +444,7 @@
           <p>Admin Assistant: <a href="mailto:Paula.Mowatt@HorizonNB.ca">Paula.Mowatt@HorizonNB.ca</a></p>
         </div>
         <div class="col">
-          <p>Internal Medicine<br>Cardiovascular Disease<br>Heart Function Clinic</p>
+          <p>Internal Medicine<br>Cardiovascular Disease</p>
           <p>1015 Regent St, Suite 302<br>Fredericton, N.B. E3B 6H5</p>
         </div>
       </div>
@@ -489,6 +489,12 @@
       <div class="form-row">
         <label>Email:</label>
         <input type="email" name="email" placeholder="Email" class="input-md">
+      </div>
+
+      <div class="form-group">
+        <label>Optional: Add a photo of yourself</label>
+        <input type="file" name="photo" accept="image/*" capture="user" aria-label="Photo of yourself">
+        <p class="form-hint" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.35rem">Photo will be sent to the office with your form. On a phone, this can open the camera for a selfie.</p>
       </div>
 
       <div class="form-row">
@@ -624,7 +630,6 @@
           How many packs per day? <input type="text" name="currentPacksPerDay" class="inline-input" placeholder="packs"> for <input type="text" name="currentYears" class="inline-input" placeholder="years"> years
         </div>
         <div class="indent chk-group">
-          <label><input type="checkbox" name="quitAttempts" value="yes"> Tried to quit<input type="text" name="quitAttemptsCount" class="inline-input"> times</label>
           <label><input type="radio" name="quitInterest" value="Interested"> Interested in quitting</label>
           <label><input type="radio" name="quitInterest" value="Not ready"> Not ready to quit at this time</label>
         </div>
@@ -1207,6 +1212,7 @@
       for (const el of form.elements) {
         if (!el.name || el.disabled) continue;
         const type = (el.type || "text").toLowerCase();
+        if (type === "file") continue;
         let value;
         if (type === "checkbox") {
           if (!el.checked) continue;
@@ -1244,6 +1250,12 @@
       }
 
       const data = collectFormData();
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(data));
+      const photoInput = form.querySelector('input[name="photo"]');
+      if (photoInput && photoInput.files && photoInput.files[0]) {
+        formData.append("photo", photoInput.files[0]);
+      }
 
       submitBtn.disabled = true;
       submitBtn.textContent = "Sending…";
@@ -1251,8 +1263,7 @@
       try {
         const res = await fetch("/api/submit", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: formData,
         });
 
         const json = await res.json();
