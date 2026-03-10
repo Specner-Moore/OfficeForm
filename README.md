@@ -1,1 +1,3 @@
-A patient intake form for a medical office. Upon submission, responses are sent via email using the Mailgun API. Information is formatted according to requirements specified by the doctor.
+This is a custom online patient questionnaire for a real medical office. It efficiently collects patient information and formats it for use in a referral letter. This information is securely sent to the office via email using mailgun API.
+
+It was built with Next.js to replace the previously used paper-based questionnaire. This will save lots of time as it removes the need to manually read through and copy information to a letter.

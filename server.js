@@ -46,6 +46,7 @@ const CONDITION_LABELS = {
   cond_copd: "COPD",
   cond_emphysema: "Emphysema",
   cond_pulmonary_embolism: "Pulmonary embolism",
+  cond_pulmonary_fibrosis: "Interstitial pulmonary fibrosis",
   cond_heart_burn: "Gastroesophageal reflux",
   cond_ibs: "Irritable bowel syndrome",
   cond_ulcerative_colitis: "Ulcerative colitis",
@@ -69,6 +70,7 @@ const CONDITION_LABELS = {
   cond_chronic_fatigue: "Chronic fatigue syndrome",
   cond_hypothyroidism: "Hypothyroidism",
   cond_hyperthyroidism: "Hyperthyroidism",
+  cond_thyroid_nodules: "Thyroid nodules",
   cond_breast_cancer: "Breast cancer",
   cond_prostate_cancer: "Prostate cancer",
   cond_bowel_cancer: "Colorectal cancer",
@@ -123,14 +125,14 @@ function getTotalInches(data) {
   return totalInches != null && totalInches >= 0 ? totalInches : null;
 }
 
-/** Format height for email as "5'10" (70in)". Uses feet/inches or converts cm to inches. */
+/** Format height for email as "5'10" (178 cm)". Uses feet/inches or converts cm to inches. */
 function formatHeightForEmail(data) {
   const totalInches = getTotalInches(data);
   if (totalInches == null) return null;
   const f = Math.floor(totalInches / 12);
   const i = Math.round(totalInches % 12);
-  const totalInchesRounded = f * 12 + i;
-  return `${f}'${i}" (${totalInchesRounded}in)`;
+  const totalCm = Math.round(totalInches * INCHES_PER_CM);
+  return `${f}'${i}" (${totalCm} cm)`;
 }
 
 /** Get weight in kg from form data (weight value + weightUnit). Returns null if missing/invalid. */
