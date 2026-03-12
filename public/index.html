@@ -607,13 +607,13 @@
       </div>
 
       <div class="chk-group">
-        <label><input type="radio" name="maritalStatus" value="Single"> Single</label>
-        <label><input type="radio" name="maritalStatus" value="Partner"> Partner</label>
-        <label><input type="radio" name="maritalStatus" value="Married"> Married</label>
-        <label><input type="radio" name="maritalStatus" value="Commmon-Law"> Common-Law</label>
-        <label><input type="radio" name="maritalStatus" value="Separated"> Separated</label>
-        <label><input type="radio" name="maritalStatus" value="Divorced"> Divorced</label>
-        <label><input type="radio" name="maritalStatus" value="Widowed"> Widowed</label>
+        <label><input type="checkbox" name="maritalStatus" value="Single"> Single</label>
+        <label><input type="checkbox" name="maritalStatus" value="Partner"> Partner</label>
+        <label><input type="checkbox" name="maritalStatus" value="Married"> Married</label>
+        <label><input type="checkbox" name="maritalStatus" value="Common-Law"> Common-Law</label>
+        <label><input type="checkbox" name="maritalStatus" value="Separated"> Separated</label>
+        <label><input type="checkbox" name="maritalStatus" value="Divorced"> Divorced</label>
+        <label><input type="checkbox" name="maritalStatus" value="Widowed"> Widowed</label>
       </div>
 
       <div class="form-row">
@@ -641,9 +641,9 @@
 
       <div class="chk-group">
         <span>Nicotine/tobacco use?</span>
-        <label><input type="radio" name="tobacco" value="Never smoked"> Never smoked</label>
-        <label><input type="radio" name="tobacco" value="Former"> Former smoker</label>
-        <label><input type="radio" name="tobacco" value="Current"> Current smoker</label>
+        <label><input type="radio" name="tobacco" value="Never smoked"> Never smoked/vaped</label>
+        <label><input type="radio" name="tobacco" value="Former"> Former smoker/vaper</label>
+        <label><input type="radio" name="tobacco" value="Current"> Current smoker/vaper</label>
       </div>
       <div class="indent conditional-section" data-tobacco="Former">
         <div class="form-row">
@@ -660,8 +660,17 @@
           <label><input type="checkbox" name="smokeType" value="Vape"> Vape</label>
           <label><input type="checkbox" name="smokeType" value="Chewing tobacco"> Chewing tobacco</label>
         </div>
-        <div class="form-row">
-          How many packs per day? <input type="text" name="currentPacksPerDay" class="inline-input" placeholder="packs"> for <input type="text" name="currentYears" class="inline-input" placeholder="years"> years
+        <div class="form-row nicotine-detail nicotine-cigarettes" style="display:none">
+          How many packs of cigarettes per day? <input type="text" name="currentCigarettePacks" class="inline-input" placeholder="packs"> for <input type="text" name="currentCigaretteYears" class="inline-input" placeholder="years"> years
+        </div>
+        <div class="form-row nicotine-detail nicotine-chewing" style="display:none">
+          How many packs of chewing tobacco per day? <input type="text" name="currentChewingPacks" class="inline-input" placeholder="packs"> for <input type="text" name="currentChewingYears" class="inline-input" placeholder="years"> years
+        </div>
+        <div class="form-row nicotine-detail nicotine-cigars" style="display:none">
+          How many cigars per day? <input type="text" name="currentCigarsPerDay" class="inline-input" placeholder="cigars"> for <input type="text" name="currentCigarsYears" class="inline-input" placeholder="years"> years
+        </div>
+        <div class="form-row nicotine-detail nicotine-vape" style="display:none">
+          How many mls of e-liquid per day? <input type="text" name="currentMlPerDay" class="inline-input" placeholder="mls"> for <input type="text" name="currentVapeYears" class="inline-input" placeholder="years"> years
         </div>
         <div class="indent chk-group">
           <label><input type="radio" name="quitInterest" value="Interested"> Interested in quitting</label>
@@ -688,6 +697,14 @@
         <label><input type="radio" name="marijuana" value="None"> None</label>
         <label><input type="radio" name="marijuana" value="Recreational"> Recreational</label>
         <label><input type="radio" name="marijuana" value="Medical"> Medical</label>
+      </div>
+      <div class="indent conditional-section" data-marijuana="Recreational,Medical">
+        <div class="chk-group">
+          <span>Frequency:</span>
+          <label><input type="radio" name="marijuanaFreq" value="Daily use"> Daily use</label>
+          <label><input type="radio" name="marijuanaFreq" value="Weekly use"> Weekly use</label>
+          <label><input type="radio" name="marijuanaFreq" value="Occasional use"> Occasional use</label>
+        </div>
       </div>
 
       <div class="chk-group">
@@ -830,7 +847,7 @@
           <label><input type="radio" name="hasGI" value="Yes"> Yes</label>
         </div>
         <div class="cond-grid conditional-section" data-hasgi="Yes" id="cond-gi">
-          <label><input type="checkbox" name="cond_heart_burn" value="yes"> Heart burn</label>
+          <label><input type="checkbox" name="cond_heart_burn" value="yes"> Heartburn</label>
           <label><input type="checkbox" name="cond_ibs" value="yes"> Irritable bowel syndrome (IBS)</label>
           <label><input type="checkbox" name="cond_ulcerative_colitis" value="yes"> Ulcerative colitis</label>
           <label><input type="checkbox" name="cond_crohns" value="yes"> Crohn's disease</label>
@@ -1029,6 +1046,7 @@
     function updateConditionalSections() {
       const tobacco = form.querySelector('input[name="tobacco"]:checked')?.value || "";
       const alcohol = form.querySelector('input[name="alcohol"]:checked')?.value || "";
+      const marijuana = form.querySelector('input[name="marijuana"]:checked')?.value || "";
       const otherDrugs = form.querySelector('input[name="otherDrugs"]:checked')?.value || "";
       document.querySelectorAll("[data-tobacco]").forEach((el) => {
         el.classList.toggle("visible", el.dataset.tobacco === tobacco);
@@ -1037,16 +1055,36 @@
         const showWhen = (el.dataset.alcohol || "").split(",").map((s) => s.trim());
         el.classList.toggle("visible", showWhen.includes(alcohol));
       });
+      document.querySelectorAll("[data-marijuana]").forEach((el) => {
+        const showWhen = (el.dataset.marijuana || "").split(",").map((s) => s.trim());
+        el.classList.toggle("visible", showWhen.includes(marijuana));
+      });
       document.querySelectorAll("[data-otherdrugs]").forEach((el) => {
         el.classList.toggle("visible", el.dataset.otherdrugs === otherDrugs);
       });
     }
 
-    form.querySelectorAll('input[name="tobacco"], input[name="alcohol"], input[name="otherDrugs"]').forEach((input) => {
+    form.querySelectorAll('input[name="tobacco"], input[name="alcohol"], input[name="marijuana"], input[name="otherDrugs"]').forEach((input) => {
       input.addEventListener("change", updateConditionalSections);
     });
     form.addEventListener("reset", () => setTimeout(updateConditionalSections, 0));
     updateConditionalSections();
+
+    function updateNicotineDetails() {
+      const cigarettes = form.querySelector('input[name="smokeType"][value="Cigarettes"]')?.checked;
+      const cigars = form.querySelector('input[name="smokeType"][value="Cigars"]')?.checked;
+      const vape = form.querySelector('input[name="smokeType"][value="Vape"]')?.checked;
+      const chewing = form.querySelector('input[name="smokeType"][value="Chewing tobacco"]')?.checked;
+      form.querySelectorAll(".nicotine-cigarettes").forEach((el) => { el.style.display = cigarettes ? "" : "none"; });
+      form.querySelectorAll(".nicotine-chewing").forEach((el) => { el.style.display = chewing ? "" : "none"; });
+      form.querySelectorAll(".nicotine-cigars").forEach((el) => { el.style.display = cigars ? "" : "none"; });
+      form.querySelectorAll(".nicotine-vape").forEach((el) => { el.style.display = vape ? "" : "none"; });
+    }
+    form.querySelectorAll('input[name="smokeType"]').forEach((input) => {
+      input.addEventListener("change", updateNicotineDetails);
+    });
+    form.addEventListener("reset", () => setTimeout(updateNicotineDetails, 0));
+    updateNicotineDetails();
 
     const heightInCmCheckbox = document.getElementById("heightInCm");
     const heightFtIn = form.querySelector(".height-ft-in");

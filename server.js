@@ -276,8 +276,9 @@ function buildEmailBody(data) {
   } else if (withWho) {
     socialLines.push(ensurePeriod(`Lives with ${withWho.toLowerCase()}`));
   }
-  const marital = val("maritalStatus");
-  if (marital) socialLines.push(marital === "Partner" ? "Has a partner." : ensurePeriod(marital));
+  const maritalArr = arr(data.maritalStatus);
+  const marital = maritalArr.length ? maritalArr.join(", ") : null;
+  if (marital) socialLines.push(ensurePeriod(marital));
   let edu = (data.education || "").toString().trim();
   if (data.student === "yes") edu = edu ? `${edu} (student)` : "Student";
   if (data.readingDifficulties === "yes") edu = edu ? `${edu} (reading difficulties)` : "Reading difficulties";
@@ -308,17 +309,60 @@ function buildEmailBody(data) {
         : parts.length ? `Former smoker: quit ${parts.join(", ")}` : "Former smoker";
       socialLines.push(ensurePeriod(nic));
     } else if (tobacco === "Current") {
-      const smokeType = arr(data.smokeType).join(", ") || "nicotine";
-      const packs = val("currentPacksPerDay");
-      const years = val("currentYears");
-      const packWord = pl(packs, "pack", "packs");
-      const yearWord = pl(years, "year", "years");
-      let nic = packs && years
-        ? `Uses ${smokeType}: ${packs} ${packWord} a day for ${years} ${yearWord}`
-        : packs || years ? `Uses ${smokeType}: ${[packs, years].filter(Boolean).join(", ")}` : `Uses ${smokeType}`;
+      let types = arr(data.smokeType);
+      if (!Array.isArray(types) || types.some((t) => typeof t !== "string")) {
+        types = [];
+      }
+      if (types.length === 1 && typeof types[0] === "string" && types[0].includes(",")) {
+        types = types[0].split(",").map((s) => s.trim()).filter(Boolean);
+      }
+      const has = (v) => types.some((t) => String(t).toLowerCase() === v.toLowerCase());
       const quitInterest = val("quitInterest");
-      if (quitInterest) nic += quitInterest === "Interested" ? " (interested in quitting)" : " (not ready to quit at this time)";
-      socialLines.push(ensurePeriod(nic));
+      const quitSuffix = quitInterest === "Interested" ? " (interested in quitting)" : quitInterest ? " (not ready to quit at this time)" : "";
+      let first = true;
+      if (has("Cigarettes")) {
+        const packs = val("currentCigarettePacks") || val("currentPacksPerDay");
+        const years = val("currentCigaretteYears") || val("currentYears");
+        const packWord = pl(packs, "pack", "packs");
+        const yearWord = pl(years, "year", "years");
+        const detail = packs && years ? `${packs} ${packWord} a day for ${years} ${yearWord}` : (packs || years) ? [packs, years].filter(Boolean).join(", ") : "—";
+        socialLines.push(ensurePeriod(`Uses cigarettes: ${detail}${first ? quitSuffix : ""}`));
+        first = false;
+      }
+      if (has("Chewing tobacco")) {
+        const packs = val("currentChewingPacks") || val("currentPacksPerDay");
+        const years = val("currentChewingYears") || val("currentYears");
+        const packWord = pl(packs, "pack", "packs");
+        const yearWord = pl(years, "year", "years");
+        const detail = packs && years ? `${packs} ${packWord} a day for ${years} ${yearWord}` : (packs || years) ? [packs, years].filter(Boolean).join(", ") : "—";
+        socialLines.push(ensurePeriod(`Uses chewing tobacco: ${detail}${first ? quitSuffix : ""}`));
+        first = false;
+      }
+      if (has("Cigars")) {
+        const cigars = val("currentCigarsPerDay");
+        const years = val("currentCigarsYears") || val("currentYears");
+        const yearWord = pl(years, "year", "years");
+        const detail = cigars && years ? `${cigars} per day for ${years} ${yearWord}` : cigars || years ? [cigars, years].filter(Boolean).join(", ") : "—";
+        socialLines.push(ensurePeriod(`Uses cigars: ${detail}${first ? quitSuffix : ""}`));
+        first = false;
+      }
+      if (has("Vape")) {
+        const mls = val("currentMlPerDay");
+        const years = val("currentVapeYears") || val("currentYears");
+        const yearWord = pl(years, "year", "years");
+        const detail = mls && years ? `${mls} mls e-liquid per day for ${years} ${yearWord}` : mls || years ? [mls, years].filter(Boolean).join(", ") : "—";
+        socialLines.push(ensurePeriod(`Uses vape: ${detail}${first ? quitSuffix : ""}`));
+        first = false;
+      }
+      if (types.length === 0) {
+        socialLines.push(ensurePeriod(`Uses nicotine${quitSuffix}`));
+      } else if (first) {
+        const smokeTypeStr = types.join(", ");
+        const packs = val("currentCigarettePacks") || val("currentPacksPerDay");
+        const years = val("currentYears");
+        const detail = packs && years ? `${packs} pack(s) a day for ${years} year(s)` : packs || years ? [packs, years].filter(Boolean).join(", ") : null;
+        socialLines.push(ensurePeriod(detail ? `Uses ${smokeTypeStr}: ${detail}${quitSuffix}` : `Uses ${smokeTypeStr}${quitSuffix}`));
+      }
     } else {
       socialLines.push(ensurePeriod(`Nicotine use: ${tobacco}`));
     }
@@ -337,7 +381,9 @@ function buildEmailBody(data) {
   const marijuana = val("marijuana");
   if (marijuana && marijuana !== "None") {
     const adv = marijuana === "Medical" ? "medicinally" : "recreationally";
-    socialLines.push(`Uses marijuana ${adv}.`);
+    const freq = (data.marijuanaFreq || "").toString().trim();
+    const freqStr = freq ? ` (${freq.toLowerCase()})` : "";
+    socialLines.push(`Uses marijuana ${adv}${freqStr}.`);
   }
   const otherDrugs = val("otherDrugs");
   if (otherDrugs && otherDrugs !== "No") {
