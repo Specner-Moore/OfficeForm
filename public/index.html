@@ -418,24 +418,52 @@
     #allergy-table-section.allergy-hidden { display: none; }
 
     .office-info {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      align-items: start;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 10rem;
       font-size: 0.9rem;
       color: var(--text-muted);
       line-height: 1.6;
+      width: fit-content;
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
       margin-bottom: 1.25rem;
       padding-bottom: 1rem;
       border-bottom: 2px solid var(--primary);
     }
     @media (max-width: 560px) {
-      .office-info { grid-template-columns: 1fr; gap: 1rem; }
+      .office-info {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+    }
+    .office-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: center;
     }
     .office-info .name { font-weight: 600; color: var(--text); font-size: 1.1rem; margin-bottom: 0.2rem; }
     .office-info .col p { margin: 0 0 0.25rem; }
     .office-info a { color: var(--primary); text-decoration: none; }
     .office-info a:hover { text-decoration: underline; }
+    .office-image {
+      flex: 0 0 auto;
+      width: 135px;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    @media (max-width: 560px) {
+      .office-image {
+        width: min(160px, 60%);
+        justify-self: center;
+      }
+    }
 
     .photo-options { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .btn-secondary { padding: 0.4rem 0.8rem; font-size: 0.9rem; background: var(--border); color: var(--text); border: none; border-radius: 6px; cursor: pointer; font-family: inherit; }
@@ -456,15 +484,18 @@
   <div class="container">
     <header>
       <div class="office-info">
-        <div class="col">
-          <div class="name">Dr. Jeff Moore MD FRCPC</div>
-          <p>506-447-4041 (ph.)<br>506-457-4758 (fax)</p>
-          <p>Admin Assistant: <a href="mailto:Paula.Mowatt@HorizonNB.ca">Paula.Mowatt@HorizonNB.ca</a></p>
+        <div class="office-text">
+          <div class="col">
+            <div class="name">Dr. Jeff Moore MD FRCPC</div>
+            <p>506-447-4041 (ph.)<br>506-457-4758 (fax)</p>
+            <p>Admin Assistant: <a href="mailto:Paula.Mowatt@HorizonNB.ca">Paula.Mowatt@HorizonNB.ca</a></p>
+          </div>
+          <div class="col">
+            <p>Internal Medicine<br>Cardiovascular Disease</p>
+            <p>1015 Regent St, Suite 302<br>Fredericton, N.B. E3B 6H5</p>
+          </div>
         </div>
-        <div class="col">
-          <p>Internal Medicine<br>Cardiovascular Disease</p>
-          <p>1015 Regent St, Suite 302<br>Fredericton, N.B. E3B 6H5</p>
-        </div>
+        <img src="/header.jpg" alt="Office header image" class="office-image">
       </div>
       <h1>Patient Intake Form</h1>
       <p class="subtitle">Thank you for providing this helpful information - it will allow me to know more about your background and save asking you so many questions at the time of the visit</p>
