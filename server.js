@@ -6,6 +6,8 @@ const formData = require("form-data");
 const Mailgun = require("mailgun.js");
 const multer = require("multer");
 const sharp = require("sharp");
+const { Readable } = require("stream");
+const { google } = require("googleapis");
 
 const mailgun = new Mailgun(formData);
 const mg = mailgun.client({
@@ -460,6 +462,190 @@ function buildEmailBody(data) {
   return body.trim();
 }
 
+function sanitizeDriveFilenamePart(str) {
+  const t = String(str || "Patient").trim() || "Patient";
+  return t.replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").replace(/\s+/g, " ").slice(0, 80).replace(/\s/g, "_");
+}
+
+function intakeDriveBaseFilename(data) {
+  const display = (data.preferredName || data.fullName || "Patient").trim() || "Patient";
+  const isoDate = new Date().toISOString().slice(0, 10);
+  return `${sanitizeDriveFilenamePart(display)}_${isoDate}`;
+}
+
+const DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive"];
+
+/** Must match an “Authorized redirect URI” in Google Cloud Console for this OAuth client. */
+function oauthRedirectUri() {
+  const fromEnv = (process.env.GOOGLE_OAUTH_REDIRECT_URI || "").trim();
+  if (fromEnv) return fromEnv;
+  return `http://localhost:${process.env.PORT || 3000}/api/google/oauth2callback`;
+}
+
+/** Express may stringify duplicate query keys as arrays. */
+function normalizeOAuthQueryParam(v) {
+  if (v == null) return null;
+  if (Array.isArray(v)) return normalizeOAuthQueryParam(v[0]);
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  return t.length ? t : null;
+}
+
+function oauthCallbackHtmlEscaped(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function getDriveOAuthClientIdAndSecret() {
+  const clientId = (process.env.GOOGLE_DRIVE_CLIENT_ID || "").trim();
+  const clientSecret = (process.env.GOOGLE_DRIVE_CLIENT_SECRET || "").trim();
+  if (!clientId || !clientSecret) return null;
+  return { clientId, clientSecret };
+}
+
+/** OAuth user flow (My Drive / shared folders you own). */
+function createOAuth2Client() {
+  const pair = getDriveOAuthClientIdAndSecret();
+  if (!pair) return null;
+  return new google.auth.OAuth2(pair.clientId, pair.clientSecret, oauthRedirectUri());
+}
+
+function isOAuthDriveReady() {
+  const refreshToken = (process.env.GOOGLE_OAUTH_REFRESH_TOKEN || "").trim();
+  return !!(getDriveOAuthClientIdAndSecret() && refreshToken);
+}
+
+/** OAuth-only: user refresh token backs uploads to Drive. */
+function createDriveClientForUpload() {
+  if (!isOAuthDriveReady()) return null;
+  const oauth2 = createOAuth2Client();
+  oauth2.setCredentials({ refresh_token: (process.env.GOOGLE_OAUTH_REFRESH_TOKEN || "").trim() });
+  return google.drive({ version: "v3", auth: oauth2 });
+}
+
+function isDriveUploadConfigured() {
+  return isOAuthDriveReady();
+}
+
+async function uploadBufferToDrive(drive, folderId, filename, buffer, mimeType) {
+  const requestBody = { name: filename };
+  const trimmed = folderId ? String(folderId).trim() : "";
+  if (trimmed) requestBody.parents = [trimmed];
+  await drive.files.create({
+    requestBody,
+    media: { mimeType, body: Readable.from(buffer) },
+    fields: "id",
+    supportsAllDrives: true,
+  });
+}
+
+async function archiveIntakeToDrive(data, emailBodyText, jpegBuffer) {
+  const drive = createDriveClientForUpload();
+  if (!drive) return;
+  const folderIdRaw = process.env.GOOGLE_DRIVE_FOLDER_ID;
+  const folderId = folderIdRaw != null ? String(folderIdRaw).trim() : "";
+  const base = intakeDriveBaseFilename(data);
+  const textBuf = Buffer.from(emailBodyText, "utf8");
+  await uploadBufferToDrive(drive, folderId, `${base}.txt`, textBuf, "text/plain; charset=UTF-8");
+  if (jpegBuffer && jpegBuffer.length > 0) {
+    await uploadBufferToDrive(drive, folderId, `${base}-photo.jpg`, jpegBuffer, "image/jpeg");
+  }
+}
+
+function driveOAuthSetupAllowed() {
+  const v = (process.env.ALLOW_DRIVE_OAUTH_SETUP || "").trim().toLowerCase();
+  if (v === "0" || v === "false" || v === "no") return false;
+  return true;
+}
+
+app.get("/api/google/start-auth", (req, res) => {
+  if (!driveOAuthSetupAllowed()) {
+    return res.status(404).send("Not found.");
+  }
+  const oauth2 = createOAuth2Client();
+  if (!oauth2) {
+    return res
+      .status(503)
+      .type("text")
+      .send("Set GOOGLE_DRIVE_CLIENT_ID and GOOGLE_DRIVE_CLIENT_SECRET in .env, then restart the server.");
+  }
+  const url = oauth2.generateAuthUrl({
+    access_type: "offline",
+    prompt: "consent",
+    scope: DRIVE_SCOPES,
+  });
+  res.redirect(url);
+});
+
+app.get("/api/google/oauth2callback", async (req, res) => {
+  if (!driveOAuthSetupAllowed()) {
+    return res.status(404).send("Not found.");
+  }
+  const oauthErr = normalizeOAuthQueryParam(req.query.error);
+  const oauthErrDesc = normalizeOAuthQueryParam(req.query.error_description);
+  let descPlain = oauthErrDesc;
+  if (descPlain) {
+    try {
+      descPlain = decodeURIComponent(descPlain.replace(/\+/g, " "));
+    } catch {
+      /* keep raw */
+    }
+  }
+  if (oauthErr) {
+    const detail = descPlain ? `<p>${oauthCallbackHtmlEscaped(descPlain)}</p>` : "";
+    return res.status(400).type("html").send(
+      `<!DOCTYPE html><meta charset="utf-8"><title>OAuth error</title><body><p>Google reported: <strong>${oauthCallbackHtmlEscaped(oauthErr)}</strong>.</p>${detail}<p>For <code>redirect_uri_mismatch</code>, the redirect URI configured in Google Cloud Console must exactly match your server’s <code>GOOGLE_OAUTH_REDIRECT_URI</code> (or default localhost URL). Restart after changing env.</p></body></html>`
+    );
+  }
+
+  const code = normalizeOAuthQueryParam(req.query.code);
+  if (!code) {
+    const expected = oauthRedirectUri();
+    const keys = req.query && typeof req.query === "object" ? Object.keys(req.query).join(", ") : "";
+    console.warn(
+      `[OAuth callback] No ?code=. originalUrl=${req.originalUrl}; queryKeys=${keys || "(none)"}; redirectInUse=${expected}`
+    );
+    return res.status(400).type("html").send(
+      `<!DOCTYPE html><meta charset="utf-8"><title>OAuth callback</title><body><p>Missing authorization <code>?code</code> from Google. That usually means:</p><ul>` +
+        `<li>You opened this callback URL directly (bookmark). Start from <a href="/api/google/start-auth">/api/google/start-auth</a> on <strong>this same host</strong> instead.</li>` +
+        `<li>You started sign-in locally but production (or vice versa): set <code>GOOGLE_OAUTH_REDIRECT_URI</code> on the server to exactly one registered URI—for example <code>${oauthCallbackHtmlEscaped(expected)}</code>.</li>` +
+        `<li>A reverse proxy or host stripped the URL query string (check CDN / nginx / rewrite rules).</li></ul>` +
+        `<p>Server expects redirect URI: <code>${oauthCallbackHtmlEscaped(expected)}</code></p></body></html>`
+    );
+  }
+
+  const oauth2 = createOAuth2Client();
+  if (!oauth2) {
+    return res.status(503).type("text").send("OAuth client not configured.");
+  }
+  try {
+    const { tokens } = await oauth2.getToken(code);
+    if (!tokens.refresh_token) {
+      return res
+        .status(200)
+        .type("html")
+        .send(
+          "<!DOCTYPE html><html><body><p>Google did not return a refresh token. In your Google Account, remove this app’s access under “Third-party access”, then visit <code>/api/google/start-auth</code> again.</p></body></html>"
+        );
+    }
+    console.log("\n========================================");
+    console.log("GOOGLE DRIVE OAuth — add to .env:\nGOOGLE_OAUTH_REFRESH_TOKEN=%s", tokens.refresh_token);
+    console.log("========================================\n");
+    res
+      .status(200)
+      .type("html")
+      .send(
+        "<!DOCTYPE html><html><body><p>Success. Check the <strong>server terminal</strong> for <code>GOOGLE_OAUTH_REFRESH_TOKEN</code>, add it to <code>.env</code>, then restart.</p></body></html>"
+      );
+  } catch (e) {
+    console.error("OAuth token exchange:", e);
+    res.status(500).type("text").send("Token exchange failed. See server log.");
+  }
+});
+
 app.post("/api/submit", upload.fields([{ name: "data" }, { name: "photo", maxCount: 1 }]), async (req, res) => {
   const apiKey = process.env.MAILGUN_API_KEY;
   const domain = process.env.MAILGUN_DOMAIN;
@@ -499,32 +685,50 @@ app.post("/api/submit", upload.fields([{ name: "data" }, { name: "photo", maxCou
     "o:require-tls": true,
   };
 
+  let compressedPhotoBuffer = null;
   const photoFile = req.files?.photo?.[0];
   if (photoFile && photoFile.buffer) {
     try {
-      const compressed = await sharp(photoFile.buffer)
+      compressedPhotoBuffer = await sharp(photoFile.buffer)
         .resize(800, 800, { fit: "inside", withoutEnlargement: true })
         .jpeg({ quality: 80 })
         .toBuffer();
-      opts.attachment = [{ filename: "patient-photo.jpg", data: compressed }];
+      opts.attachment = [{ filename: "patient-photo.jpg", data: compressedPhotoBuffer }];
     } catch (err) {
       console.error("Image compress error:", err);
     }
   }
 
+  const driveUploadConfigured = isDriveUploadConfigured();
+  let driveArchived = false;
+  if (driveUploadConfigured) {
+    try {
+      await archiveIntakeToDrive(formDataParsed, emailBody, compressedPhotoBuffer);
+      driveArchived = true;
+    } catch (driveErr) {
+      console.error("Google Drive upload error:", driveErr);
+    }
+  }
+
   try {
     await mg.messages.create(domain, opts);
-
-    return res.json({ success: true, message: "Form submitted successfully." });
+    const payload = { success: true, message: "Form submitted successfully." };
+    if (driveUploadConfigured) payload.driveArchived = driveArchived;
+    return res.json(payload);
   } catch (err) {
     console.error("Mailgun error:", err);
-    return res.status(500).json({
+    const payload = {
       success: false,
       message: "Failed to send form. Please try again or contact the office.",
-    });
+    };
+    if (driveUploadConfigured) payload.driveArchived = driveArchived;
+    return res.status(500).json(payload);
   }
 });
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
+  if (driveOAuthSetupAllowed() && createOAuth2Client()) {
+    console.log(`OAuth redirect URI in use — must match Google Cloud “Authorized redirect URIs”: ${oauthRedirectUri()}`);
+  }
 });
