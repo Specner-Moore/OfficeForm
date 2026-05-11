@@ -446,12 +446,18 @@ function buildEmailBody(data) {
       age: (data[`family_${i}_age`] || "").toString().trim(),
       cond: (data[`family_${i}_conditions`] || "").toString().trim(),
     }))
-    .filter((row) => row.rel || row.status || row.age || row.cond)
+    .filter((row) => row.rel && (row.status || row.age || row.cond))
     .map((row) => {
-      const s = (row.status || "").toLowerCase();
+      if (!row.status) {
+        if (row.age && row.cond) return `${row.rel}, ${row.age}: ${row.cond}`;
+        if (row.age) return `${row.rel}, ${row.age}`;
+        return `${row.rel}, ${row.cond}`;
+      }
+      const s = row.status.toLowerCase();
       const statusPhrase = s.includes("passed") || s.includes("died") ? "died at" : "living at";
-      const agePart = row.age ? `${statusPhrase} ${row.age}` : row.status || "—";
-      return `${row.rel || "—"}, ${agePart}: ${row.cond || ""}`;
+      const agePart = row.age ? `${statusPhrase} ${row.age}` : row.status;
+      const tail = row.cond ? `: ${row.cond}` : "";
+      return `${row.rel}, ${agePart}${tail}`;
     });
   if (famLines.length || data.adopted === "yes") {
     body += "\n\nFAMILY HISTORY:\n";
@@ -468,9 +474,10 @@ function sanitizeDriveFilenamePart(str) {
 }
 
 function intakeDriveBaseFilename(data) {
-  const display = (data.preferredName || data.fullName || "Patient").trim() || "Patient";
+  const display = (data.fullName || data.preferredName || "Patient").trim() || "Patient";
+  const age = data.age ? data.age.toString().trim() + "_" : "";
   const isoDate = new Date().toISOString().slice(0, 10);
-  return `${sanitizeDriveFilenamePart(display)}_${isoDate}`;
+  return `${sanitizeDriveFilenamePart(display)}_${age}${isoDate}`;
 }
 
 const DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive"];
