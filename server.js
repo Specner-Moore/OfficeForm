@@ -549,13 +549,21 @@ async function uploadBufferToDrive(drive, folderId, filename, buffer, mimeType) 
   });
 }
 
+/** Plain text for Drive: CRLF so in-browser print treats each line as a hard break (LF-only often collapses on print). */
+function formatPlainTextForDrive(text) {
+  return String(text)
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/\n/g, "\r\n");
+}
+
 async function archiveIntakeToDrive(data, emailBodyText, jpegBuffer) {
   const drive = createDriveClientForUpload();
   if (!drive) return;
   const folderIdRaw = process.env.GOOGLE_DRIVE_FOLDER_ID;
   const folderId = folderIdRaw != null ? String(folderIdRaw).trim() : "";
   const base = intakeDriveBaseFilename(data);
-  const textBuf = Buffer.from(emailBodyText, "utf8");
+  const textBuf = Buffer.from(formatPlainTextForDrive(emailBodyText), "utf8");
   await uploadBufferToDrive(drive, folderId, `${base}.txt`, textBuf, "text/plain; charset=UTF-8");
   if (jpegBuffer && jpegBuffer.length > 0) {
     await uploadBufferToDrive(drive, folderId, `${base}-photo.jpg`, jpegBuffer, "image/jpeg");
