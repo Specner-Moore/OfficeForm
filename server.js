@@ -7,6 +7,7 @@ const Mailgun = require("mailgun.js");
 const multer = require("multer");
 const sharp = require("sharp");
 const { Readable } = require("stream");
+const PDFDocument = require("pdfkit");
 const { google } = require("googleapis");
 
 const mailgun = new Mailgun(formData);
@@ -549,12 +550,22 @@ async function uploadBufferToDrive(drive, folderId, filename, buffer, mimeType) 
   });
 }
 
-/** Plain text for Drive: CRLF so in-browser print treats each line as a hard break (LF-only often collapses on print). */
-function formatPlainTextForDrive(text) {
-  return String(text)
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .replace(/\n/g, "\r\n");
+/** PDF with explicit line layout — Drive print opens in Acrobat; auto-converted .txt PDFs often drop newlines. */
+function intakeTextToPdfBuffer(text) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: "LETTER", margin: 54 });
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+    doc.font("Courier").fontSize(9);
+    const normalized = String(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    for (const line of normalized.split("\n")) {
+      doc.text(line.length ? line : " ", { width: pageWidth, lineGap: 1 });
+    }
+    doc.end();
+  });
 }
 
 async function archiveIntakeToDrive(data, emailBodyText, jpegBuffer) {
@@ -563,8 +574,8 @@ async function archiveIntakeToDrive(data, emailBodyText, jpegBuffer) {
   const folderIdRaw = process.env.GOOGLE_DRIVE_FOLDER_ID;
   const folderId = folderIdRaw != null ? String(folderIdRaw).trim() : "";
   const base = intakeDriveBaseFilename(data);
-  const textBuf = Buffer.from(formatPlainTextForDrive(emailBodyText), "utf8");
-  await uploadBufferToDrive(drive, folderId, `${base}.txt`, textBuf, "text/plain; charset=UTF-8");
+  const pdfBuf = await intakeTextToPdfBuffer(emailBodyText);
+  await uploadBufferToDrive(drive, folderId, `${base}.pdf`, pdfBuf, "application/pdf");
   if (jpegBuffer && jpegBuffer.length > 0) {
     await uploadBufferToDrive(drive, folderId, `${base}-photo.jpg`, jpegBuffer, "image/jpeg");
   }
